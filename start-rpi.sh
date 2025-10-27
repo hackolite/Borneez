@@ -97,14 +97,16 @@ echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}2️⃣  Démarrage du Frontend + Proxy Server${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-npm run dev &
+echo -e "${YELLOW}🔐 Le port 80 nécessite les privilèges sudo...${NC}"
+sudo PORT=80 npm run dev &
 FRONTEND_PID=$!
 
 # Attendre que le frontend soit prêt
 sleep 5
 
-# Obtenir l'IP locale
+# Obtenir l'IP locale et le hostname
 LOCAL_IP=$(hostname -I | awk '{print $1}')
+HOSTNAME=$(hostname)
 
 echo ""
 echo -e "${GREEN}╔═══════════════════════════════════════════════════════════╗${NC}"
@@ -112,8 +114,9 @@ echo -e "${GREEN}║                    ✅ SYSTÈME DÉMARRÉ ✅              
 echo -e "${GREEN}╚═══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${GREEN}🌐 Frontend disponible sur:${NC}"
-echo -e "   Local:  ${BLUE}http://localhost:5000${NC}"
-echo -e "   Réseau: ${BLUE}http://$LOCAL_IP:5000${NC}"
+echo -e "   Local:     ${BLUE}http://localhost${NC}"
+echo -e "   Hostname:  ${BLUE}http://$HOSTNAME.local${NC}"
+echo -e "   IP:        ${BLUE}http://$LOCAL_IP${NC}"
 echo ""
 echo -e "${GREEN}🔧 Backend GPIO sur:${NC}"
 echo -e "   Local:  ${BLUE}http://localhost:8000${NC}"
@@ -122,10 +125,13 @@ echo ""
 echo -e "${GREEN}📖 Documentation API:${NC}         ${BLUE}http://localhost:8000/docs${NC}"
 echo ""
 echo -e "${YELLOW}📝 Configuration requise (depuis un autre PC):${NC}"
-echo -e "   1. Ouvrez ${BLUE}http://$LOCAL_IP:5000${NC}"
+echo -e "   1. Ouvrez ${BLUE}http://$HOSTNAME.local${NC} ou ${BLUE}http://$LOCAL_IP${NC}"
 echo -e "   2. Cliquez sur 'API Configuration'"
 echo -e "   3. Entrez l'endpoint: ${BLUE}http://$LOCAL_IP:8000${NC}"
 echo -e "   4. Cliquez sur 'Test Connection' puis 'Save Configuration'"
+echo ""
+echo -e "${YELLOW}💡 Astuce: Pour activer l'accès via $HOSTNAME.local, installez:${NC}"
+echo -e "   ${BLUE}sudo apt-get install avahi-daemon${NC}"
 echo ""
 echo -e "${RED}⚠️  Mode GPIO RÉEL - Les relais sont connectés!${NC}"
 echo -e "${RED}⚠️  Appuyez sur Ctrl+C pour arrêter tous les services${NC}"

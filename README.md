@@ -34,7 +34,7 @@ Le projet est organisé en **trois couches séparées** :
 ┌────────────────────▼────────────────────────────────────┐
 │           PROXY SERVER (Express/TypeScript)             │
 │        Gère la configuration et proxy les requêtes      │
-│                  localhost:5000                          │
+│      localhost ou raspberrypi.local (port 80)           │
 └────────────────────┬────────────────────────────────────┘
                      │ HTTP/REST API
                      │
@@ -126,9 +126,48 @@ Créez un fichier `.env` à la racine :
 # Endpoint de l'API GPIO (optionnel, peut être configuré via l'interface)
 RELAY_API_ENDPOINT=http://192.168.1.100:8000
 
-# Port du serveur proxy (par défaut: 5000)
-PORT=5000
+# Port du serveur proxy
+# Par défaut: 80 (port HTTP standard - nécessite sudo sur Linux/Mac)
+# Développement: 5000 (pas besoin de sudo)
+PORT=80
 ```
+
+### Configuration mDNS pour accès via raspberrypi.local
+
+Pour accéder au système via un nom de domaine local (ex: `raspberrypi.local`) au lieu d'une adresse IP :
+
+**Sur Raspberry Pi (Linux) :**
+```bash
+# Installer Avahi (daemon mDNS)
+sudo apt-get update
+sudo apt-get install avahi-daemon
+
+# Vérifier que le service est actif
+sudo systemctl status avahi-daemon
+
+# Le système sera accessible via: http://raspberrypi.local
+# (ou http://<votre-hostname>.local si vous avez changé le hostname)
+```
+
+**Changer le hostname (optionnel) :**
+```bash
+# Voir le hostname actuel
+hostname
+
+# Changer le hostname
+sudo raspi-config
+# Sélectionner: System Options > Hostname > Entrer le nouveau nom
+
+# Ou directement:
+sudo hostnamectl set-hostname nouveau-nom
+
+# Redémarrer
+sudo reboot
+```
+
+Après configuration, vous pourrez accéder au système via :
+- `http://raspberrypi.local` (si hostname = raspberrypi)
+- `http://votre-nom.local` (si vous avez changé le hostname)
 
 ## 🚀 Utilisation
 
@@ -159,11 +198,13 @@ Ces commandes démarrent automatiquement :
 - ✅ Configuration automatique
 
 Une fois démarré :
-1. Ouvrez `http://localhost:5000`
+1. Ouvrez `http://localhost:5000` (mode développement avec port 5000)
 2. Cliquez sur "API Configuration"
 3. Entrez : `http://localhost:8000`
 4. Cliquez sur "Test Connection" puis "Save Configuration"
 5. Contrôlez les relais depuis l'interface !
+
+> **Note :** En mode développement, le port 5000 est utilisé pour éviter d'avoir besoin de privilèges sudo.
 
 #### Option 2 : Sur Raspberry Pi (Contrôle GPIO Réel)
 
@@ -174,12 +215,15 @@ Une fois démarré :
 
 Cette commande démarre :
 - ✅ Backend GPIO avec contrôle matériel réel
-- ✅ Frontend + Proxy Server  
+- ✅ Frontend + Proxy Server (port 80)
 - ✅ Accessible depuis le réseau local
 
 Une fois démarré :
-- Local : `http://localhost:5000`
-- Réseau : `http://<IP_RASPBERRY>:5000`
+- Local : `http://localhost`
+- mDNS : `http://raspberrypi.local` (si Avahi est installé)
+- Réseau : `http://<IP_RASPBERRY>`
+
+> **Note :** Le port 80 nécessite `sudo`. Le script vous demandera le mot de passe au démarrage.
 
 ### 🔧 Mode développement manuel (avancé)
 
@@ -209,11 +253,19 @@ Documentation automatique : `http://localhost:8000/docs`
 npm run dev
 ```
 
-Le serveur démarre sur `http://localhost:5000`
+Le serveur démarre sur `http://localhost:5000` (développement)
+
+En production sur Raspberry Pi, utilisez le port 80 :
+```bash
+# Avec sudo pour le port 80
+sudo PORT=80 npm run dev
+
+# Le serveur sera accessible sur http://localhost (sans port)
+```
 
 #### Étape 3 : Configurer l'endpoint dans l'interface
 
-1. Ouvrez `http://localhost:5000`
+1. Ouvrez `http://localhost:5000` (développement) ou `http://raspberrypi.local` (production)
 2. Dans le panneau "API Configuration", entrez l'URL :
    - Développement local : `http://localhost:8000`
    - Raspberry Pi distant : `http://192.168.1.100:8000`
@@ -231,8 +283,16 @@ Le frontend est construit dans `dist/client/`
 
 #### Démarrer le serveur production
 ```bash
-npm start
+# Port 80 (nécessite sudo sur Linux/Mac)
+sudo PORT=80 npm start
+
+# Ou utiliser un port personnalisé
+PORT=3000 npm start
 ```
+
+Le système sera accessible sur :
+- Port 80 : `http://raspberrypi.local` ou `http://<IP_RASPBERRY>`
+- Autre port : `http://raspberrypi.local:3000` ou `http://<IP_RASPBERRY>:3000`
 
 ## 📁 Structure du projet
 
@@ -406,7 +466,7 @@ npm run build
 npm start
 ```
 
-Accédez à `http://<IP_RASPBERRY>:5000`
+Accédez à `http://<IP_RASPBERRY>` (port 80) ou `http://raspberrypi.local`
 
 ### Option 2 : Déploiement sur VPS avec frontend et proxy
 
@@ -422,18 +482,18 @@ npm run build
 # Configurer l'endpoint vers le Raspberry Pi
 export RELAY_API_ENDPOINT=http://<IP_RASPBERRY>:8000
 
-# Démarrer
-npm start
+# Démarrer (port 80 nécessite sudo)
+sudo PORT=80 npm start
 ```
 
-Accédez à `http://<IP_VPS>:5000`
+Accédez à `http://<IP_VPS>` ou `http://votre-domaine.com`
 
 **Note** : Le frontend actuel utilise des URLs relatives et doit être servi par le même serveur que l'API proxy. Pour un déploiement complètement découplé (ex: Vercel pour le frontend seul), il faudrait ajouter la configuration `VITE_API_URL`.
 
 ### Option 3 : Architecture complète cloud
 
 1. **Raspberry Pi** : Contrôleur GPIO uniquement (port 8000)
-2. **Serveur VPS** : Proxy Express (port 5000) 
+2. **Serveur VPS** : Proxy Express (port 80 ou votre choix)
 3. **Hébergeur statique** : Frontend React
 
 ## 🔍 Dépannage
@@ -445,14 +505,17 @@ Accédez à `http://<IP_VPS>:5000`
 # Tester le contrôleur GPIO directement
 curl http://<IP_RASPBERRY>:8000/
 
-# Tester le proxy
-curl http://localhost:5000/api/status
+# Tester le proxy (sans port si port 80)
+curl http://raspberrypi.local/api/status
+# ou avec IP
+curl http://<IP_RASPBERRY>/api/status
 ```
 
 **Solutions :**
-- Vérifiez que le firewall autorise les ports (8000, 5000)
+- Vérifiez que le firewall autorise les ports (8000, 80)
 - Vérifiez l'URL configurée dans l'interface
 - Regardez les logs du serveur
+- Sur Linux/Mac, assurez-vous d'utiliser `sudo` pour le port 80
 
 ### Erreur "GPIO not found"
 
