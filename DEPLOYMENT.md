@@ -120,95 +120,42 @@ Pour trouver l'IP :
 hostname -I
 ```
 
-### Scénario 2 : Frontend déployé sur Vercel/Netlify
+### Scénario 2 : Proxy + Frontend sur VPS
 
 **Architecture :**
 ```
-[Raspberry Pi]              [Cloud]
-├── GPIO Controller ←──────→ Frontend (Vercel/Netlify)
-└── Proxy Server
+[Raspberry Pi]              [VPS Cloud]
+GPIO Controller ←────────── Proxy + Frontend
+(port 8000)                 (port 5000)
 ```
 
 **Avantages :**
-- Interface accessible de partout
-- Performance optimale
-- CDN global
+- Frontend accessible de partout
+- Configuration centralisée
+- Pas besoin d'exposer le Raspberry Pi
 
 **Instructions :**
 
-1. **Préparer le Raspberry Pi** (comme Scénario 1)
+1. **Préparer le Raspberry Pi** (GPIO Controller uniquement)
 
-2. **Rendre le Raspberry Pi accessible**
+Suivez l'étape 1 et 2 du Scénario 1 pour installer le GPIO Controller.
 
-Option A - Avec VPN (Recommandé) :
+2. **Connecter le Raspberry Pi au VPS**
+
+Option A - Avec VPN Tailscale (Recommandé) :
 ```bash
-# Installer Tailscale (VPN mesh)
+# Sur Raspberry Pi ET sur VPS
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 ```
 
-Option B - Avec port forwarding (moins sécurisé) :
-- Configurez votre routeur pour forward le port 5000
-- Utilisez un DNS dynamique (DuckDNS, No-IP)
-
-3. **Déployer sur Vercel**
-
+Option B - Avec tunnel SSH :
 ```bash
-# Local
-npm install -g vercel
-
-# Se connecter
-vercel login
-
-# Déployer
-vercel --prod
-
-# Configuration build :
-# Build Command: npm run build
-# Output Directory: dist/client
-```
-
-4. **Configurer l'endpoint**
-
-Une fois déployé sur Vercel :
-1. Visitez votre URL Vercel
-2. Allez dans "API Configuration"
-3. Entrez l'URL de votre Raspberry Pi :
-   - Avec Tailscale : `http://100.x.x.x:5000` (IP Tailscale)
-   - Avec port forwarding : `http://votre-domaine.duckdns.org:5000`
-
-### Scénario 3 : Architecture complète cloud
-
-**Architecture :**
-```
-[Raspberry Pi]           [VPS Cloud]              [Vercel]
-GPIO Controller ←──────→ Proxy Server ←──────────→ Frontend
-(port 8000)              (port 5000)
-```
-
-**Avantages :**
-- Séparation complète
-- Scalabilité maximale
-- Sécurité améliorée
-
-**Instructions :**
-
-1. **Sur Raspberry Pi** - GPIO Controller uniquement
-
-```bash
-# Modifier BGPIO.py pour accepter uniquement localhost
-# (le proxy sera le seul à y accéder via tunnel)
-```
-
-Créer un tunnel SSH vers le VPS :
-```bash
-# Sur Raspberry Pi
+# Sur Raspberry Pi, créer un tunnel vers le VPS
 ssh -R 8000:localhost:8000 user@votre-vps.com -N
 ```
 
-Ou utiliser un tunnel permanent comme Tailscale.
-
-2. **Sur VPS Cloud** - Proxy Server
+3. **Déployer sur le VPS**
 
 ```bash
 # Sur le VPS
@@ -217,16 +164,33 @@ cd Borneez
 npm install
 npm run build
 
-# Configurer l'endpoint
-export RELAY_API_ENDPOINT=http://localhost:8000  # Via tunnel
+# Configurer l'endpoint (via Tailscale ou tunnel)
+export RELAY_API_ENDPOINT=http://100.x.x.x:8000  # IP Tailscale du Raspberry
+# ou
+export RELAY_API_ENDPOINT=http://localhost:8000  # Si tunnel SSH
 
 # Démarrer
 npm start
 ```
 
-3. **Sur Vercel** - Frontend (comme Scénario 2)
+4. **Accès**
 
-Configurez l'endpoint vers votre VPS : `https://votre-vps.com:5000`
+Le frontend est accessible à `https://votre-vps.com:5000` (configurez HTTPS, voir section Sécurité).
+
+**Note** : Cette configuration garde le frontend et le proxy ensemble sur le VPS, ce qui correspond à l'architecture actuelle du code.
+
+### Scénario 3 : Architecture complète cloud
+
+**Architecture :**
+```
+[Raspberry Pi]           [VPS Cloud]
+GPIO Controller ←──────→ Proxy + Frontend
+(port 8000)              (port 5000)
+```
+
+**Note** : Cette architecture est identique au Scénario 2. Pour déployer le frontend complètement séparément (ex: Vercel), il faudrait modifier le code pour supporter `VITE_API_URL` et configurer CORS sur le proxy.
+
+**Pour l'instant, la meilleure architecture distribuée est le Scénario 2 ci-dessus.**
 
 ## 🔒 Sécurité
 

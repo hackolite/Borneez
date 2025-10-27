@@ -215,25 +215,22 @@ L'interface web comprend :
    - Switch de contrôle
    - Dernière mise à jour
 
-## 🚀 Déploiement
+## 🌐 Déploiement
 
-### Option 1 : Tout sur Raspberry Pi
+### Option 1 : Tout sur Raspberry Pi (Recommandé)
 ```bash
 npm run build
 npm start
 # Accès : http://IP_RASPBERRY:5000
 ```
 
-### Option 2 : Frontend sur Vercel
-```bash
-vercel --prod
-# Configurer l'endpoint vers http://IP_RASPBERRY:5000
-```
+### Option 2 : Architecture distribuée (avancé)
+- Raspberry Pi : GPIO API uniquement (port 8000)
+- VPS : Proxy server + Frontend (port 5000)
+- Accès : http://VPS:5000
 
-### Option 3 : Architecture distribuée
-- Raspberry Pi : GPIO API uniquement
-- VPS : Proxy server
-- Vercel : Frontend
+**Note**: Le frontend utilise des URLs relatives et doit être servi par le même serveur que l'API proxy.
+Pour un déploiement complètement séparé (ex: Vercel), il faudrait configurer `VITE_API_URL`.
 
 Voir **DEPLOYMENT.md** pour les détails !
 

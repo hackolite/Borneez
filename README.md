@@ -349,34 +349,27 @@ npm start
 
 Accédez à `http://<IP_RASPBERRY>:5000`
 
-### Option 2 : Frontend déployé séparément
+### Option 2 : Déploiement sur VPS avec frontend et proxy
 
-Le frontend peut être déployé sur n'importe quel hébergeur :
+Le proxy server et le frontend peuvent être déployés ensemble sur un VPS :
 
-#### Vercel
 ```bash
-# Installer Vercel CLI
-npm i -g vercel
-
-# Déployer
-vercel --prod
-```
-
-#### Netlify
-```bash
-# Build
+# Sur le VPS
+git clone https://github.com/hackolite/Borneez.git
+cd Borneez
+npm install
 npm run build
 
-# Uploader le dossier dist/client/ vers Netlify
+# Configurer l'endpoint vers le Raspberry Pi
+export RELAY_API_ENDPOINT=http://<IP_RASPBERRY>:8000
+
+# Démarrer
+npm start
 ```
 
-#### Configuration
-Configurez l'endpoint dans l'interface pour pointer vers votre Raspberry Pi :
-```
-http://<IP_PUBLIQUE_RASPBERRY>:5000
-```
+Accédez à `http://<IP_VPS>:5000`
 
-⚠️ **Sécurité** : Pour un accès public, utilisez HTTPS et authentification !
+**Note** : Le frontend actuel utilise des URLs relatives et doit être servi par le même serveur que l'API proxy. Pour un déploiement complètement découplé (ex: Vercel pour le frontend seul), il faudrait ajouter la configuration `VITE_API_URL`.
 
 ### Option 3 : Architecture complète cloud
 
