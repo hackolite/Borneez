@@ -1,0 +1,41 @@
+[Unit]
+Description=Borneez Proxy Server Service
+Documentation=https://github.com/hackolite/Borneez
+After=network.target borneez-gpio.service
+Wants=network-online.target
+Requires=borneez-gpio.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/Borneez
+
+# Variables d'environnement
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+Environment="RELAY_API_ENDPOINT=http://localhost:8000"
+
+# Commande pour démarrer le serveur proxy
+ExecStart=/usr/bin/node /home/pi/Borneez/dist/index.js
+
+# Redémarrage automatique en cas d'échec
+Restart=always
+RestartSec=10
+
+# Délai avant de considérer le service comme démarré
+StartLimitInterval=200
+StartLimitBurst=5
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=borneez-server
+
+# Sécurité
+NoNewPrivileges=true
+PrivateTmp=true
+ReadWritePaths=/home/pi/Borneez
+
+[Install]
+WantedBy=multi-user.target

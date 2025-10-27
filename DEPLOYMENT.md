@@ -4,6 +4,13 @@
 
 Ce guide explique comment déployer Borneez dans différents scénarios.
 
+> **⚡ Démarrage Rapide** : Pour une installation automatique, utilisez :
+> ```bash
+> sudo deployment/scripts/setup-production.sh nginx
+> ```
+> Ce script configure automatiquement tout ce qui est décrit ci-dessous.
+> Pour plus de détails, voir [deployment/README.md](deployment/README.md)
+
 ## 📋 Scénarios de déploiement
 
 ### Scénario 1 : Tout sur le Raspberry Pi (Recommandé pour débuter)
@@ -12,16 +19,39 @@ Ce guide explique comment déployer Borneez dans différents scénarios.
 ```
 [Raspberry Pi]
 ├── GPIO Controller (port 8000)
-├── Proxy Server (port 80)
-└── Frontend (servi via proxy)
+├── Proxy Server (port 3000)
+└── Reverse Proxy Nginx/Caddy (port 80) → Proxy Server
 ```
 
 **Avantages :**
 - Simple à configurer
 - Une seule machine
 - Pas besoin de configuration réseau complexe
+- Port 80 standard pour HTTP
+- HTTPS facile à activer
 
 **Instructions :**
+
+### Option A : Installation Automatique (Recommandée)
+
+```bash
+# Se connecter au Raspberry Pi
+ssh pi@raspberrypi.local
+
+# Cloner le projet
+git clone https://github.com/hackolite/Borneez.git
+cd Borneez
+
+# Lancer l'installation automatique avec Nginx
+sudo deployment/scripts/setup-production.sh nginx
+
+# Ou avec Caddy (HTTPS automatique)
+sudo deployment/scripts/setup-production.sh caddy
+```
+
+✅ C'est tout ! L'application est maintenant accessible sur `http://raspberrypi.local`
+
+### Option B : Installation Manuelle (Avancée)
 
 1. **Installation sur Raspberry Pi**
 ```bash
