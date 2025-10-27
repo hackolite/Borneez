@@ -132,23 +132,79 @@ PORT=5000
 
 ## 🚀 Utilisation
 
-### Mode développement complet
+### ⚡ Démarrage Rapide (Recommandé)
 
-#### Étape 1 : Démarrer le contrôleur GPIO (sur Raspberry Pi)
+#### Option 1 : Tout en un - Mode Développement (Sans Raspberry Pi)
+
+Le moyen le plus simple pour tester le système sans matériel GPIO :
+
+**Linux/Mac :**
 ```bash
-# Sur le Raspberry Pi
-cd /chemin/vers/Borneez
-python3 BGPIO.py
+./start-dev.sh
+```
 
-# Ou avec uvicorn directement
+**Windows :**
+```batch
+start-dev.bat
+```
+
+**Ou avec npm :**
+```bash
+npm run dev:full
+```
+
+Ces commandes démarrent automatiquement :
+- ✅ Backend GPIO en mode Mock (simule les GPIO)
+- ✅ Frontend + Proxy Server
+- ✅ Configuration automatique
+
+Une fois démarré :
+1. Ouvrez `http://localhost:5000`
+2. Cliquez sur "API Configuration"
+3. Entrez : `http://localhost:8000`
+4. Cliquez sur "Test Connection" puis "Save Configuration"
+5. Contrôlez les relais depuis l'interface !
+
+#### Option 2 : Sur Raspberry Pi (Contrôle GPIO Réel)
+
+**Sur le Raspberry Pi :**
+```bash
+./start-rpi.sh
+```
+
+Cette commande démarre :
+- ✅ Backend GPIO avec contrôle matériel réel
+- ✅ Frontend + Proxy Server  
+- ✅ Accessible depuis le réseau local
+
+Une fois démarré :
+- Local : `http://localhost:5000`
+- Réseau : `http://<IP_RASPBERRY>:5000`
+
+### 🔧 Mode développement manuel (avancé)
+
+Si vous préférez démarrer les services séparément :
+
+#### Étape 1 : Démarrer le contrôleur GPIO
+
+**Mode Mock (développement) :**
+```bash
+python3 BGPIO_mock.py
+# ou
+npm run dev:backend
+```
+
+**Mode Réel (sur Raspberry Pi) :**
+```bash
+python3 BGPIO.py
+# ou avec uvicorn
 uvicorn BGPIO:app --host 0.0.0.0 --port 8000
 ```
 
-Le serveur GPIO démarre sur `http://<IP_RASPBERRY>:8000`
+Le serveur GPIO démarre sur `http://localhost:8000`
+Documentation automatique : `http://localhost:8000/docs`
 
-Vous pouvez accéder à la documentation automatique : `http://<IP_RASPBERRY>:8000/docs`
-
-#### Étape 2 : Démarrer le serveur proxy + frontend (sur votre PC)
+#### Étape 2 : Démarrer le serveur proxy + frontend
 ```bash
 npm run dev
 ```
@@ -158,12 +214,11 @@ Le serveur démarre sur `http://localhost:5000`
 #### Étape 3 : Configurer l'endpoint dans l'interface
 
 1. Ouvrez `http://localhost:5000`
-2. Dans le panneau "API Configuration", entrez l'URL de votre Raspberry Pi :
-   ```
-   http://192.168.1.100:8000
-   ```
+2. Dans le panneau "API Configuration", entrez l'URL :
+   - Développement local : `http://localhost:8000`
+   - Raspberry Pi distant : `http://192.168.1.100:8000`
 3. Cliquez sur "Test Connection" pour vérifier
-4. Cliquez sur "Save" pour enregistrer
+4. Cliquez sur "Save Configuration"
 
 ### Mode production
 
@@ -183,7 +238,11 @@ npm start
 
 ```
 Borneez/
-├── BGPIO.py                 # ⚡ Serveur FastAPI pour contrôle GPIO
+├── BGPIO.py                 # ⚡ Serveur FastAPI pour contrôle GPIO (Raspberry Pi)
+├── BGPIO_mock.py            # 🧪 Serveur FastAPI Mock (tests sans GPIO)
+├── start-dev.sh             # 🚀 Script de démarrage rapide (Linux/Mac)
+├── start-dev.bat            # 🚀 Script de démarrage rapide (Windows)
+├── start-rpi.sh             # 🍓 Script de démarrage Raspberry Pi
 ├── server/                  # 🖥️ Serveur proxy Express/TypeScript
 │   ├── index.ts            # Point d'entrée du serveur
 │   ├── routes.ts           # Routes API du proxy
