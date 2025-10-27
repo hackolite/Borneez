@@ -12,7 +12,7 @@ Ce guide explique comment déployer Borneez dans différents scénarios.
 ```
 [Raspberry Pi]
 ├── GPIO Controller (port 8000)
-├── Proxy Server (port 5000)
+├── Proxy Server (port 80)
 └── Frontend (servi via proxy)
 ```
 
@@ -91,10 +91,12 @@ Requires=gpio-controller.service
 
 [Service]
 Type=simple
-User=pi
+# User=root car PORT=80 nécessite des privilèges élevés
+# Alternative: utilisez PORT=3000 avec User=pi et un reverse proxy (Nginx/Caddy)
+User=root
 WorkingDirectory=/home/pi/Borneez
 Environment="NODE_ENV=production"
-Environment="PORT=5000"
+Environment="PORT=80"
 Environment="RELAY_API_ENDPOINT=http://localhost:8000"
 ExecStart=/usr/bin/node /home/pi/Borneez/dist/index.js
 Restart=always
@@ -103,6 +105,10 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 ```
+
+**Note :** Le service s'exécute en tant que `root` car le port 80 nécessite des privilèges élevés. Pour plus de sécurité, vous pouvez aussi :
+- Utiliser `PORT=3000` avec `User=pi` et configurer un reverse proxy (Nginx ou Caddy)
+- Ou utiliser `setcap` pour donner au binaire Node.js la capacité de lier les ports privilégiés
 
 ```bash
 # Activer et démarrer
@@ -113,11 +119,23 @@ sudo systemctl status borneez-server
 
 4. **Accès**
 
-Accédez à l'interface : `http://<IP_RASPBERRY>:5000`
+Accédez à l'interface :
+- Via IP : `http://<IP_RASPBERRY>`
+- Via mDNS : `http://raspberrypi.local` (si Avahi est installé)
 
 Pour trouver l'IP :
 ```bash
 hostname -I
+```
+
+Pour activer l'accès mDNS :
+```bash
+# Installer Avahi daemon
+sudo apt-get update
+sudo apt-get install avahi-daemon
+
+# Vérifier le service
+sudo systemctl status avahi-daemon
 ```
 
 ### Scénario 2 : Proxy + Frontend sur VPS
@@ -126,7 +144,7 @@ hostname -I
 ```
 [Raspberry Pi]              [VPS Cloud]
 GPIO Controller ←────────── Proxy + Frontend
-(port 8000)                 (port 5000)
+(port 8000)                 (port 80)
 ```
 
 **Avantages :**
@@ -169,13 +187,13 @@ export RELAY_API_ENDPOINT=http://100.x.x.x:8000  # IP Tailscale du Raspberry
 # ou
 export RELAY_API_ENDPOINT=http://localhost:8000  # Si tunnel SSH
 
-# Démarrer
-npm start
+# Démarrer (port 80 nécessite sudo)
+sudo PORT=80 npm start
 ```
 
 4. **Accès**
 
-Le frontend est accessible à `https://votre-vps.com:5000` (configurez HTTPS, voir section Sécurité).
+Le frontend est accessible à `http://votre-vps.com` ou `https://votre-vps.com` (configurez HTTPS, voir section Sécurité).
 
 **Note** : Cette configuration garde le frontend et le proxy ensemble sur le VPS, ce qui correspond à l'architecture actuelle du code.
 
@@ -185,7 +203,7 @@ Le frontend est accessible à `https://votre-vps.com:5000` (configurez HTTPS, vo
 ```
 [Raspberry Pi]           [VPS Cloud]
 GPIO Controller ←──────→ Proxy + Frontend
-(port 8000)              (port 5000)
+(port 8000)              (port 80)
 ```
 
 **Note** : Cette architecture est identique au Scénario 2. Pour déployer le frontend complètement séparément (ex: Vercel), il faudrait modifier le code pour supporter `VITE_API_URL` et configurer CORS sur le proxy.
@@ -198,23 +216,30 @@ GPIO Controller ←──────→ Proxy + Frontend
 
 1. **Utiliser HTTPS**
 
-Avec Nginx reverse proxy :
+**Option A (Recommandée) - Nginx comme reverse proxy :**
+
+Nginx gère le SSL/HTTPS et proxifie vers Borneez sur un port non-privilégié.
+
 ```bash
 # Installer Nginx et Certbot
 sudo apt-get install nginx certbot python3-certbot-nginx
+
+# Démarrer Borneez sur port 3000 (évite les privilèges root)
+PORT=3000 npm start
 
 # Configurer Nginx
 sudo nano /etc/nginx/sites-available/borneez
 ```
 
-Configuration :
+Configuration Nginx :
 ```nginx
 server {
     listen 80;
     server_name votre-domaine.com;
 
     location / {
-        proxy_pass http://localhost:5000;
+        # Borneez tourne sur port 3000 (voir commande ci-dessus)
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -225,9 +250,25 @@ server {
 ```
 
 ```bash
-# Activer et obtenir certificat SSL
+# Activer la configuration
 sudo ln -s /etc/nginx/sites-available/borneez /etc/nginx/sites-enabled/
+
+# Obtenir le certificat SSL automatiquement
 sudo certbot --nginx -d votre-domaine.com
+
+# Nginx configurera automatiquement HTTPS (port 443)
+```
+
+**Option B - Borneez directement sur port 80 (sans Nginx) :**
+
+Borneez écoute directement sur port 80. Pour HTTPS, utilisez un autre reverse proxy.
+
+```bash
+# Démarrer Borneez sur port 80
+sudo PORT=80 npm start
+
+# Pour HTTPS, utilisez Caddy qui gère automatiquement les certificats
+# https://caddyserver.com/
 ```
 
 2. **Ajouter une authentification**
@@ -247,8 +288,8 @@ location / {
     auth_basic "Restricted Access";
     auth_basic_user_file /etc/nginx/.htpasswd;
     
-    proxy_pass http://localhost:5000;
-    # ...
+    proxy_pass http://localhost:3000;
+    # ... reste de la config proxy
 }
 ```
 
@@ -317,7 +358,7 @@ sudo systemctl status gpio-controller
 sudo systemctl status borneez-server
 
 # Vérifier les ports
-sudo netstat -tlnp | grep -E '5000|8000'
+sudo netstat -tlnp | grep -E '80|8000'
 ```
 
 ### Tester directement
@@ -326,7 +367,7 @@ sudo netstat -tlnp | grep -E '5000|8000'
 curl http://localhost:8000/
 
 # Proxy Server
-curl http://localhost:5000/api/status
+curl http://localhost/api/status
 ```
 
 ### Problèmes courants
@@ -341,7 +382,7 @@ sudo journalctl -u borneez-server -n 50
 **Port déjà utilisé :**
 ```bash
 # Trouver le processus
-sudo lsof -i :5000
+sudo lsof -i :80
 
 # Arrêter le processus
 sudo kill -9 <PID>
