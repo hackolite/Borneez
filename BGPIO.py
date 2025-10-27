@@ -1,19 +1,15 @@
+from fastapi import FastAPI
 import RPi.GPIO as GPIO
-import time
+from pydantic import BaseModel
+from typing import List
 
-# --- Configuration générale ---
+# --- Configuration GPIO ---
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-# --- Classe pour gérer plusieurs relais ---
+# --- Classe de gestion des relais ---
 class RelayController:
     def __init__(self, pins, active_low=True):
-        """
-        Initialise un contrôleur de relais.
-
-        :param pins: liste des GPIO connectés aux relais (ex: [17, 27, 22, 23])
-        :param active_low: True si le relais s'active à LOW (courant pour les relais 5V)
-        """
         self.pins = pins
         self.active_low = active_low
         self.ACTIVE = GPIO.LOW if active_low else GPIO.HIGH
@@ -24,53 +20,59 @@ class RelayController:
             GPIO.output(pin, self.INACTIVE)
 
     def control(self, pin, state):
-        """
-        Active ou désactive un relais spécifique.
-
-        :param pin: numéro du GPIO
-        :param state: 'on' ou 'off'
-        """
         if pin not in self.pins:
-            print(f"Erreur : GPIO {pin} non déclaré dans la liste des relais.")
-            return
+            return {"error": f"GPIO {pin} non déclaré."}
 
-        if state.lower() == "on":
+        if state == "on":
             GPIO.output(pin, self.ACTIVE)
-            print(f"Relais {pin} -> ON (fermé)")
-        elif state.lower() == "off":
+        elif state == "off":
             GPIO.output(pin, self.INACTIVE)
-            print(f"Relais {pin} -> OFF (ouvert)")
         else:
-            print("Erreur : utiliser 'on' ou 'off'.")
+            return {"error": "État invalide (utilise 'on' ou 'off')."}
+
+        return {"gpio": pin, "state": state}
 
     def all_on(self):
-        """Allume tous les relais."""
         for pin in self.pins:
             GPIO.output(pin, self.ACTIVE)
-        print("✅ Tous les relais sont activés.")
+        return {"message": "Tous les relais activés."}
 
     def all_off(self):
-        """Éteint tous les relais."""
         for pin in self.pins:
             GPIO.output(pin, self.INACTIVE)
-        print("🛑 Tous les relais sont désactivés.")
+        return {"message": "Tous les relais désactivés."}
 
-    def cleanup(self):
-        """Nettoie la configuration GPIO."""
-        GPIO.cleanup()
-        print("Nettoyage GPIO effectué.")
+# --- Initialisation des relais (à adapter à ton câblage) ---
+relais = RelayController([17, 27, 22, 23])
 
-# --- Exemple d'utilisation ---
-if __name__ == "__main__":
-    try:
-        relais = RelayController([17, 27, 22, 23])  # Liste des broches
-        relais.control(17, "on")
-        time.sleep(1)
-        relais.control(17, "off")
-        time.sleep(1)
+# --- Application FastAPI ---
+app = FastAPI(title="Relay API", description="API REST pour contrôler les relais du Raspberry Pi", version="1.0")
 
-        relais.all_on()
-        time.sleep(2)
-        relais.all_off()
-    finally:
-        relais.cleanup()
+# --- Modèle de données ---
+class RelayCommand(BaseModel):
+    gpio: int
+    state: str  # "on" ou "off"
+
+# --- Routes principales ---
+@app.get("/")
+def root():
+    return {"message": "API relais opérationnelle ✅", "pins": relais.pins}
+
+@app.post("/relay")
+def control_relay(cmd: RelayCommand):
+    """Active ou désactive un relais spécifique."""
+    return relais.control(cmd.gpio, cmd.state.lower())
+
+@app.post("/relay/all_on")
+def turn_all_on():
+    """Active tous les relais."""
+    return relais.all_on()
+
+@app.post("/relay/all_off")
+def turn_all_off():
+    """Désactive tous les relais."""
+    return relais.all_off()
+
+@app.on_event("shutdown")
+def cleanup_gpio():
+    GPIO.cleanup()
