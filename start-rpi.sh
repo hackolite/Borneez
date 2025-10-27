@@ -63,8 +63,10 @@ GPIO_DEPS=$?
 
 if [ $BASIC_DEPS -ne 0 ] || [ $GPIO_DEPS -ne 0 ]; then
     echo -e "${YELLOW}📦 Installation des dépendances Python...${NC}"
-    # RPi.GPIO doit être installé via apt-get sur Raspberry Pi pour
-    # garantir la compatibilité avec les GPIO du système
+    # RPi.GPIO doit être installé via apt-get sur Raspberry Pi car il nécessite
+    # des permissions système et un accès direct au matériel GPIO.
+    # L'installation apt-get garantit la compilation correcte avec les en-têtes
+    # kernel nécessaires et les bonnes permissions pour accéder à /dev/gpiomem
     if [ $GPIO_DEPS -ne 0 ]; then
         sudo apt-get update
         sudo apt-get install -y python3-rpi.gpio

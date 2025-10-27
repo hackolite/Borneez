@@ -59,6 +59,8 @@ echo.
 REM Créer un fichier pour gérer les processus
 echo @echo off > stop-services.bat
 echo taskkill /F /IM python.exe /T 2^>nul >> stop-services.bat
+echo taskkill /F /IM python3.exe /T 2^>nul >> stop-services.bat
+echo taskkill /F /IM py.exe /T 2^>nul >> stop-services.bat
 echo taskkill /F /IM node.exe /T 2^>nul >> stop-services.bat
 echo del stop-services.bat >> stop-services.bat
 
