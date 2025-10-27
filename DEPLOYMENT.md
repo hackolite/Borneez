@@ -217,18 +217,21 @@ Avec Nginx reverse proxy :
 # Installer Nginx et Certbot
 sudo apt-get install nginx certbot python3-certbot-nginx
 
+# Démarrer Borneez sur port 3000 (pour utiliser avec Nginx)
+PORT=3000 npm start
+
 # Configurer Nginx
 sudo nano /etc/nginx/sites-available/borneez
 ```
 
-Configuration :
+Configuration Nginx (avec Borneez sur port 3000) :
 ```nginx
 server {
     listen 80;
     server_name votre-domaine.com;
 
     location / {
-        proxy_pass http://localhost:80;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -238,7 +241,36 @@ server {
 }
 ```
 
-**Note :** Si votre serveur Borneez tourne sur le port 80, Nginx doit écouter sur un port différent ou vous pouvez configurer Borneez sur un autre port et faire du reverse proxy.
+**Note :** Si vous utilisez Nginx comme reverse proxy, vous avez deux options :
+
+**Option A (Recommandée) - Nginx comme reverse proxy :**
+```bash
+# Démarrer Borneez sur un port non-privilégié
+PORT=3000 npm start
+```
+Puis configurer Nginx pour proxifier :
+```nginx
+server {
+    listen 80;
+    server_name votre-domaine.com;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+**Option B - Borneez directement sur port 80 :**
+```bash
+# Pas de Nginx, Borneez écoute directement sur port 80
+sudo PORT=80 npm start
+```
+Pour HTTPS sans Nginx, utilisez Caddy qui gère automatiquement les certificats.
 
 ```bash
 # Activer et obtenir certificat SSL
@@ -263,8 +295,8 @@ location / {
     auth_basic "Restricted Access";
     auth_basic_user_file /etc/nginx/.htpasswd;
     
-    proxy_pass http://localhost:80;
-    # ...
+    proxy_pass http://localhost:3000;
+    # ... reste de la config proxy
 }
 ```
 
