@@ -91,6 +91,8 @@ Requires=gpio-controller.service
 
 [Service]
 Type=simple
+# User=root car PORT=80 nécessite des privilèges élevés
+# Alternative: utilisez PORT=3000 avec User=pi et un reverse proxy (Nginx/Caddy)
 User=root
 WorkingDirectory=/home/pi/Borneez
 Environment="NODE_ENV=production"
@@ -104,7 +106,9 @@ RestartSec=10
 WantedBy=multi-user.target
 ```
 
-**Note :** Le service s'exécute en tant que `root` car le port 80 nécessite des privilèges élevés.
+**Note :** Le service s'exécute en tant que `root` car le port 80 nécessite des privilèges élevés. Pour plus de sécurité, vous pouvez aussi :
+- Utiliser `PORT=3000` avec `User=pi` et configurer un reverse proxy (Nginx ou Caddy)
+- Ou utiliser `setcap` pour donner au binaire Node.js la capacité de lier les ports privilégiés
 
 ```bash
 # Activer et démarrer
@@ -212,25 +216,29 @@ GPIO Controller ←──────→ Proxy + Frontend
 
 1. **Utiliser HTTPS**
 
-Avec Nginx reverse proxy :
+**Option A (Recommandée) - Nginx comme reverse proxy :**
+
+Nginx gère le SSL/HTTPS et proxifie vers Borneez sur un port non-privilégié.
+
 ```bash
 # Installer Nginx et Certbot
 sudo apt-get install nginx certbot python3-certbot-nginx
 
-# Démarrer Borneez sur port 3000 (pour utiliser avec Nginx)
+# Démarrer Borneez sur port 3000 (évite les privilèges root)
 PORT=3000 npm start
 
 # Configurer Nginx
 sudo nano /etc/nginx/sites-available/borneez
 ```
 
-Configuration Nginx (avec Borneez sur port 3000) :
+Configuration Nginx :
 ```nginx
 server {
     listen 80;
     server_name votre-domaine.com;
 
     location / {
+        # Borneez tourne sur port 3000 (voir commande ci-dessus)
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -241,41 +249,26 @@ server {
 }
 ```
 
-**Note :** Si vous utilisez Nginx comme reverse proxy, vous avez deux options :
-
-**Option A (Recommandée) - Nginx comme reverse proxy :**
 ```bash
-# Démarrer Borneez sur un port non-privilégié
-PORT=3000 npm start
-```
-Puis configurer Nginx pour proxifier :
-```nginx
-server {
-    listen 80;
-    server_name votre-domaine.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-**Option B - Borneez directement sur port 80 :**
-```bash
-# Pas de Nginx, Borneez écoute directement sur port 80
-sudo PORT=80 npm start
-```
-Pour HTTPS sans Nginx, utilisez Caddy qui gère automatiquement les certificats.
-
-```bash
-# Activer et obtenir certificat SSL
+# Activer la configuration
 sudo ln -s /etc/nginx/sites-available/borneez /etc/nginx/sites-enabled/
+
+# Obtenir le certificat SSL automatiquement
 sudo certbot --nginx -d votre-domaine.com
+
+# Nginx configurera automatiquement HTTPS (port 443)
+```
+
+**Option B - Borneez directement sur port 80 (sans Nginx) :**
+
+Borneez écoute directement sur port 80. Pour HTTPS, utilisez un autre reverse proxy.
+
+```bash
+# Démarrer Borneez sur port 80
+sudo PORT=80 npm start
+
+# Pour HTTPS, utilisez Caddy qui gère automatiquement les certificats
+# https://caddyserver.com/
 ```
 
 2. **Ajouter une authentification**
