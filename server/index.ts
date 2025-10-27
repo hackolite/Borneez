@@ -67,10 +67,10 @@ app.use((req, res, next) => {
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Default to port 80 (standard HTTP port) for easier access without port number.
-  // Note: On Linux/Mac, port 80 requires root/sudo privileges.
+  // Default to port 5000 for development-friendly access without requiring root privileges.
+  // Note: Port 80 requires root/sudo privileges and should be set via PORT env variable in production.
   // this serves both the API and the client.
-  const port = parseInt(process.env.PORT || '80', 10);
+  const port = parseInt(process.env.PORT || '5000', 10);
   server.listen({
     port,
     host: "0.0.0.0",
