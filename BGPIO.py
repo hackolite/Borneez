@@ -76,3 +76,8 @@ def turn_all_off():
 @app.on_event("shutdown")
 def cleanup_gpio():
     GPIO.cleanup()
+
+# --- Point d'entrée principal ---
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
