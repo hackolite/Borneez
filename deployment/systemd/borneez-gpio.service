@@ -1,0 +1,37 @@
+[Unit]
+Description=Borneez GPIO Controller Service
+Documentation=https://github.com/hackolite/Borneez
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/Borneez
+
+# Commande pour démarrer le contrôleur GPIO
+ExecStart=/usr/bin/python3 /home/pi/Borneez/BGPIO.py
+
+# Redémarrage automatique en cas d'échec
+Restart=always
+RestartSec=10
+
+# Délai avant de considérer le service comme démarré
+StartLimitInterval=200
+StartLimitBurst=5
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=borneez-gpio
+
+# Sécurité
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Variables d'environnement (optionnel)
+# Environment="GPIO_PINS=17,27,22,23"
+
+[Install]
+WantedBy=multi-user.target

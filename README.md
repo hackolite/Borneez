@@ -274,15 +274,43 @@ sudo PORT=80 npm run dev
 
 ### Mode production
 
-#### Build du frontend
+#### ⚡ Démarrage Rapide Production (Recommandé)
+
+**Méthode 1 : Installation automatique avec reverse proxy (Nginx/Caddy)**
+
+Pour une installation complète en production avec reverse proxy et services systemd :
+
 ```bash
-npm run build
+# Installation complète avec Nginx (recommandé)
+sudo deployment/scripts/setup-production.sh nginx
+
+# Ou avec Caddy (HTTPS automatique)
+sudo deployment/scripts/setup-production.sh caddy
 ```
 
-Le frontend est construit dans `dist/client/`
+Le script configure automatiquement :
+- ✅ Toutes les dépendances système
+- ✅ Reverse proxy (Nginx ou Caddy) sur port 80
+- ✅ Services systemd pour démarrage automatique
+- ✅ Support mDNS (accès via raspberrypi.local)
 
-#### Démarrer le serveur production
+**Méthode 2 : Démarrage manuel sur port 80**
+
 ```bash
+# Démarrage rapide en production (port 80)
+sudo ./start-production.sh
+
+# Ou sur un autre port
+PORT=3000 ./start-production.sh
+```
+
+**Méthode 3 : Démarrage traditionnel**
+
+```bash
+# Build du frontend
+npm run build
+
+# Démarrer le serveur production
 # Port 80 (nécessite sudo sur Linux/Mac)
 sudo PORT=80 npm start
 
@@ -293,6 +321,11 @@ PORT=3000 npm start
 Le système sera accessible sur :
 - Port 80 : `http://raspberrypi.local` ou `http://<IP_RASPBERRY>`
 - Autre port : `http://raspberrypi.local:3000` ou `http://<IP_RASPBERRY>:3000`
+
+> **📖 Pour plus de détails sur le déploiement en production** :
+> - Guide complet : [deployment/README.md](deployment/README.md)
+> - Quickstart : [QUICKSTART_PRODUCTION.md](QUICKSTART_PRODUCTION.md)
+> - Configuration avancée : [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ## 📁 Structure du projet
 

@@ -1,0 +1,43 @@
+# Caddy reverse proxy configuration for Borneez
+# Caddy gère automatiquement HTTPS avec Let's Encrypt
+# Configuration plus simple que Nginx
+
+# Configuration pour un domaine (avec HTTPS automatique)
+# Remplacez 'votre-domaine.com' par votre domaine réel
+# votre-domaine.com {
+#     reverse_proxy localhost:3000
+#     
+#     # Headers personnalisés
+#     header {
+#         # Security headers
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+#         X-Content-Type-Options "nosniff"
+#         X-Frame-Options "SAMEORIGIN"
+#         Referrer-Policy "strict-origin-when-cross-origin"
+#     }
+#     
+#     # Logs
+#     log {
+#         output file /var/log/caddy/borneez.log
+#     }
+# }
+
+# Configuration pour localhost ou IP (HTTP uniquement)
+# Utilisez cette configuration si vous n'avez pas de domaine
+:80 {
+    reverse_proxy localhost:3000
+    
+    # Logs
+    log {
+        output file /var/log/caddy/borneez.log
+    }
+}
+
+# Configuration avancée avec path-based routing (exemple)
+# :80 {
+#     # Route par défaut vers l'application
+#     reverse_proxy localhost:3000
+#     
+#     # Route spéciale pour l'API GPIO (si besoin d'accès direct)
+#     reverse_proxy /gpio/* localhost:8000
+# }
