@@ -2,7 +2,7 @@
 
 ## ✅ Mission Accomplie
 
-**Objectif** : "met moi tout en place, dont script pour reverse proxy et utilisation aisé de port 80 en production, dans les regles standards"
+**Objectif** : "met moi tout en place, dont script pour reverse proxy et utilisation aisée de port 80 en production, dans les règles standards"
 
 **Statut** : ✅ COMPLÉTÉ
 
