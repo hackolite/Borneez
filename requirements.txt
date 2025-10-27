@@ -1,0 +1,8 @@
+# FastAPI and dependencies for GPIO controller
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+
+# Note: RPi.GPIO should be installed system-wide via apt-get on Raspberry Pi
+# because it requires direct hardware access and system permissions
+# Install with: sudo apt-get install python3-rpi.gpio

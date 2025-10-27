@@ -53,27 +53,47 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
-# Vérifier si les dépendances Python sont installées
-echo -e "${YELLOW}🔍 Vérification des dépendances Python...${NC}"
-python3 -c "import fastapi, uvicorn, pydantic" 2>/dev/null
+# Configurer l'environnement virtuel Python
+VENV_DIR="./venv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo -e "${YELLOW}🐍 Configuration de l'environnement virtuel Python...${NC}"
+    ./scripts/setup-venv.sh
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Erreur lors de la configuration de l'environnement virtuel${NC}"
+        exit 1
+    fi
+fi
+
+# Vérifier que le venv contient les dépendances nécessaires
+echo -e "${YELLOW}🔍 Vérification des dépendances Python dans le venv...${NC}"
+"$VENV_DIR/bin/python" -c "import fastapi, uvicorn, pydantic" 2>/dev/null
 BASIC_DEPS=$?
 
+if [ $BASIC_DEPS -ne 0 ]; then
+    echo -e "${YELLOW}📦 Installation des dépendances Python dans le venv...${NC}"
+    "$VENV_DIR/bin/pip" install -r requirements.txt -q
+fi
+
+# Vérifier RPi.GPIO (doit être installé au niveau système)
 python3 -c "import RPi.GPIO" 2>/dev/null
 GPIO_DEPS=$?
 
-if [ $BASIC_DEPS -ne 0 ] || [ $GPIO_DEPS -ne 0 ]; then
-    echo -e "${YELLOW}📦 Installation des dépendances Python...${NC}"
+if [ $GPIO_DEPS -ne 0 ]; then
+    echo -e "${YELLOW}📦 Installation de RPi.GPIO (système)...${NC}"
     # RPi.GPIO doit être installé via apt-get sur Raspberry Pi car il nécessite
     # des permissions système et un accès direct au matériel GPIO.
     # L'installation apt-get garantit la compilation correcte avec les en-têtes
     # kernel nécessaires et les bonnes permissions pour accéder à /dev/gpiomem
-    if [ $GPIO_DEPS -ne 0 ]; then
-        sudo apt-get update
-        sudo apt-get install -y python3-rpi.gpio
-    fi
-    # Les autres dépendances peuvent être installées via pip
-    if [ $BASIC_DEPS -ne 0 ]; then
-        pip3 install fastapi uvicorn pydantic
+    sudo apt-get update
+    sudo apt-get install -y python3-rpi.gpio
+    
+    # Créer un lien symbolique vers RPi.GPIO dans le venv
+    SYSTEM_PACKAGES=$(python3 -c "import sys; print([p for p in sys.path if 'dist-packages' in p][0])" 2>/dev/null)
+    VENV_SITE_PACKAGES=$(find "$VENV_DIR/lib" -type d -name "site-packages" | head -n 1)
+    
+    if [ -n "$SYSTEM_PACKAGES" ] && [ -n "$VENV_SITE_PACKAGES" ]; then
+        ln -s "$SYSTEM_PACKAGES/RPi" "$VENV_SITE_PACKAGES/RPi" 2>/dev/null || true
+        ln -s "$SYSTEM_PACKAGES/RPi.GPIO-"*.egg-info "$VENV_SITE_PACKAGES/" 2>/dev/null || true
     fi
 fi
 
@@ -81,12 +101,12 @@ echo ""
 echo -e "${GREEN}✅ Toutes les dépendances sont prêtes!${NC}"
 echo ""
 
-# Démarrer le backend GPIO (RÉEL)
+# Démarrer le backend GPIO (RÉEL) avec le venv
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}1️⃣  Démarrage du Backend GPIO (Mode Réel)${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}⚡ Contrôle GPIO ACTIVÉ - Vérifiez votre câblage!${NC}"
-python3 BGPIO.py &
+"$VENV_DIR/bin/python" BGPIO.py &
 BACKEND_PID=$!
 
 # Attendre que le backend soit prêt

@@ -39,12 +39,23 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Démarrer le backend GPIO (RÉEL)
+# Configurer l'environnement virtuel Python si nécessaire
+VENV_DIR="./venv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo -e "${YELLOW}🐍 Configuration de l'environnement virtuel Python...${NC}"
+    ./scripts/setup-venv.sh
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Erreur lors de la configuration de l'environnement virtuel${NC}"
+        exit 1
+    fi
+fi
+
+# Démarrer le backend GPIO (RÉEL) avec le venv
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}1️⃣  Démarrage du Backend GPIO (Mode Réel)${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}⚡ Contrôle GPIO ACTIVÉ - Vérifiez votre câblage!${NC}"
-python3 BGPIO.py &
+"$VENV_DIR/bin/python" BGPIO.py &
 BACKEND_PID=$!
 
 # Attendre que le backend soit prêt

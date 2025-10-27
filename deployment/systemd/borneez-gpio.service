@@ -10,8 +10,9 @@ User=pi
 Group=pi
 WorkingDirectory=/home/pi/Borneez
 
-# Commande pour démarrer le contrôleur GPIO
-ExecStart=/usr/bin/python3 /home/pi/Borneez/BGPIO.py
+# Commande pour démarrer le contrôleur GPIO avec venv
+# Le script active automatiquement le venv avant de lancer l'application
+ExecStart=/home/pi/Borneez/venv/bin/python /home/pi/Borneez/BGPIO.py
 
 # Redémarrage automatique en cas d'échec
 Restart=always
