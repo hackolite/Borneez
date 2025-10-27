@@ -55,12 +55,24 @@ fi
 
 # Vérifier si les dépendances Python sont installées
 echo -e "${YELLOW}🔍 Vérification des dépendances Python...${NC}"
-python3 -c "import fastapi, uvicorn, pydantic, RPi.GPIO" 2>/dev/null
-if [ $? -ne 0 ]; then
+python3 -c "import fastapi, uvicorn, pydantic" 2>/dev/null
+BASIC_DEPS=$?
+
+python3 -c "import RPi.GPIO" 2>/dev/null
+GPIO_DEPS=$?
+
+if [ $BASIC_DEPS -ne 0 ] || [ $GPIO_DEPS -ne 0 ]; then
     echo -e "${YELLOW}📦 Installation des dépendances Python...${NC}"
-    sudo apt-get update
-    sudo apt-get install -y python3-rpi.gpio
-    pip3 install fastapi uvicorn pydantic
+    # RPi.GPIO doit être installé via apt-get sur Raspberry Pi pour
+    # garantir la compatibilité avec les GPIO du système
+    if [ $GPIO_DEPS -ne 0 ]; then
+        sudo apt-get update
+        sudo apt-get install -y python3-rpi.gpio
+    fi
+    # Les autres dépendances peuvent être installées via pip
+    if [ $BASIC_DEPS -ne 0 ]; then
+        pip3 install fastapi uvicorn pydantic
+    fi
 fi
 
 echo ""

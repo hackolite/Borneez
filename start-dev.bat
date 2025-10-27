@@ -20,10 +20,22 @@ if %errorlevel% neq 0 (
 REM Vérifier Python
 where python >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERREUR] Python n'est pas installe!
-    echo Installez Python depuis https://www.python.org/
-    pause
-    exit /b 1
+    where py >nul 2>&1
+    if %errorlevel% neq 0 (
+        where python3 >nul 2>&1
+        if %errorlevel% neq 0 (
+            echo [ERREUR] Python n'est pas installe!
+            echo Installez Python depuis https://www.python.org/
+            pause
+            exit /b 1
+        ) else (
+            set PYTHON_CMD=python3
+        )
+    ) else (
+        set PYTHON_CMD=py
+    )
+) else (
+    set PYTHON_CMD=python
 )
 
 REM Installer les dépendances Node.js si nécessaire
@@ -34,10 +46,10 @@ if not exist "node_modules" (
 
 REM Installer les dépendances Python si nécessaire
 echo [INFO] Verification des dependances Python...
-python -c "import fastapi, uvicorn, pydantic" 2>nul
+%PYTHON_CMD% -c "import fastapi, uvicorn, pydantic" 2>nul
 if %errorlevel% neq 0 (
     echo [INFO] Installation des dependances Python...
-    pip install fastapi uvicorn pydantic
+    %PYTHON_CMD% -m pip install fastapi uvicorn pydantic
 )
 
 echo.
@@ -53,7 +65,7 @@ echo del stop-services.bat >> stop-services.bat
 echo ========================================================
 echo   Demarrage du Backend GPIO (Mock Mode)
 echo ========================================================
-start "Backend GPIO (Mock)" cmd /k python BGPIO_mock.py
+start "Backend GPIO (Mock)" cmd /k %PYTHON_CMD% BGPIO_mock.py
 
 REM Attendre que le backend soit prêt
 timeout /t 3 /nobreak >nul
