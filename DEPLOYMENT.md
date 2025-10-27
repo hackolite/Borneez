@@ -12,7 +12,7 @@ Ce guide explique comment déployer Borneez dans différents scénarios.
 ```
 [Raspberry Pi]
 ├── GPIO Controller (port 8000)
-├── Proxy Server (port 5000)
+├── Proxy Server (port 80)
 └── Frontend (servi via proxy)
 ```
 
@@ -91,10 +91,10 @@ Requires=gpio-controller.service
 
 [Service]
 Type=simple
-User=pi
+User=root
 WorkingDirectory=/home/pi/Borneez
 Environment="NODE_ENV=production"
-Environment="PORT=5000"
+Environment="PORT=80"
 Environment="RELAY_API_ENDPOINT=http://localhost:8000"
 ExecStart=/usr/bin/node /home/pi/Borneez/dist/index.js
 Restart=always
@@ -103,6 +103,8 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 ```
+
+**Note :** Le service s'exécute en tant que `root` car le port 80 nécessite des privilèges élevés.
 
 ```bash
 # Activer et démarrer
@@ -113,11 +115,23 @@ sudo systemctl status borneez-server
 
 4. **Accès**
 
-Accédez à l'interface : `http://<IP_RASPBERRY>:5000`
+Accédez à l'interface :
+- Via IP : `http://<IP_RASPBERRY>`
+- Via mDNS : `http://raspberrypi.local` (si Avahi est installé)
 
 Pour trouver l'IP :
 ```bash
 hostname -I
+```
+
+Pour activer l'accès mDNS :
+```bash
+# Installer Avahi daemon
+sudo apt-get update
+sudo apt-get install avahi-daemon
+
+# Vérifier le service
+sudo systemctl status avahi-daemon
 ```
 
 ### Scénario 2 : Proxy + Frontend sur VPS
@@ -126,7 +140,7 @@ hostname -I
 ```
 [Raspberry Pi]              [VPS Cloud]
 GPIO Controller ←────────── Proxy + Frontend
-(port 8000)                 (port 5000)
+(port 8000)                 (port 80)
 ```
 
 **Avantages :**
@@ -169,13 +183,13 @@ export RELAY_API_ENDPOINT=http://100.x.x.x:8000  # IP Tailscale du Raspberry
 # ou
 export RELAY_API_ENDPOINT=http://localhost:8000  # Si tunnel SSH
 
-# Démarrer
-npm start
+# Démarrer (port 80 nécessite sudo)
+sudo PORT=80 npm start
 ```
 
 4. **Accès**
 
-Le frontend est accessible à `https://votre-vps.com:5000` (configurez HTTPS, voir section Sécurité).
+Le frontend est accessible à `http://votre-vps.com` ou `https://votre-vps.com` (configurez HTTPS, voir section Sécurité).
 
 **Note** : Cette configuration garde le frontend et le proxy ensemble sur le VPS, ce qui correspond à l'architecture actuelle du code.
 
@@ -185,7 +199,7 @@ Le frontend est accessible à `https://votre-vps.com:5000` (configurez HTTPS, vo
 ```
 [Raspberry Pi]           [VPS Cloud]
 GPIO Controller ←──────→ Proxy + Frontend
-(port 8000)              (port 5000)
+(port 8000)              (port 80)
 ```
 
 **Note** : Cette architecture est identique au Scénario 2. Pour déployer le frontend complètement séparément (ex: Vercel), il faudrait modifier le code pour supporter `VITE_API_URL` et configurer CORS sur le proxy.
@@ -214,7 +228,7 @@ server {
     server_name votre-domaine.com;
 
     location / {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://localhost:80;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -223,6 +237,8 @@ server {
     }
 }
 ```
+
+**Note :** Si votre serveur Borneez tourne sur le port 80, Nginx doit écouter sur un port différent ou vous pouvez configurer Borneez sur un autre port et faire du reverse proxy.
 
 ```bash
 # Activer et obtenir certificat SSL
@@ -247,7 +263,7 @@ location / {
     auth_basic "Restricted Access";
     auth_basic_user_file /etc/nginx/.htpasswd;
     
-    proxy_pass http://localhost:5000;
+    proxy_pass http://localhost:80;
     # ...
 }
 ```
@@ -317,7 +333,7 @@ sudo systemctl status gpio-controller
 sudo systemctl status borneez-server
 
 # Vérifier les ports
-sudo netstat -tlnp | grep -E '5000|8000'
+sudo netstat -tlnp | grep -E '80|8000'
 ```
 
 ### Tester directement
@@ -326,7 +342,7 @@ sudo netstat -tlnp | grep -E '5000|8000'
 curl http://localhost:8000/
 
 # Proxy Server
-curl http://localhost:5000/api/status
+curl http://localhost/api/status
 ```
 
 ### Problèmes courants
@@ -341,7 +357,7 @@ sudo journalctl -u borneez-server -n 50
 **Port déjà utilisé :**
 ```bash
 # Trouver le processus
-sudo lsof -i :5000
+sudo lsof -i :80
 
 # Arrêter le processus
 sudo kill -9 <PID>
