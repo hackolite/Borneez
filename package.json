@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "predev:full": "node scripts/check-deps.js",
     "dev": "NODE_ENV=development tsx server/index.ts",
     "dev:backend": "python3 BGPIO_mock.py",
     "dev:full": "concurrently \"npm:dev:backend\" \"npm:dev\" --names \"backend,frontend\" --prefix-colors \"blue,green\"",
