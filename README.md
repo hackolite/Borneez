@@ -119,6 +119,28 @@ relais = RelayController([17, 27, 22, 23])
 
 ## ⚙️ Configuration
 
+### Configuration des ports
+
+Le système Borneez peut être configuré sur différents ports selon le mode de déploiement :
+
+**Mode Développement (port 5000) :**
+- Utilise le port 5000 pour éviter d'avoir besoin de privilèges sudo
+- Idéal pour le développement et les tests
+- Accès : `http://localhost:5000`
+
+**Mode Production avec Reverse Proxy (port 80) :**
+- Nginx ou Caddy écoute sur le port 80
+- Le serveur Node.js tourne sur le port 3000 (interne)
+- Le reverse proxy redirige les requêtes du port 80 vers le port 3000
+- Accès : `http://raspberrypi.local` (sans numéro de port)
+- Configuration recommandée pour la production
+
+**Mode Production sans Reverse Proxy (port 80) :**
+- Le serveur Node.js écoute directement sur le port 80
+- Nécessite des privilèges sudo
+- Accès : `http://raspberrypi.local` (sans numéro de port)
+- Configuration automatique si aucun reverse proxy n'est sélectionné lors de l'installation
+
 ### Variables d'environnement (optionnel)
 
 Créez un fichier `.env` à la racine :
@@ -285,8 +307,16 @@ sudo deployment/scripts/setup-production.sh caddy
 Le script configure automatiquement :
 - ✅ Toutes les dépendances système
 - ✅ Reverse proxy (Nginx ou Caddy) sur port 80
-- ✅ Services systemd pour démarrage automatique
+- ✅ Services systemd pour démarrage automatique au boot du Raspberry Pi
 - ✅ Support mDNS (accès via raspberrypi.local)
+- ✅ Configuration du port : port 3000 (interne) avec reverse proxy, ou port 80 (direct) sans reverse proxy
+
+**Option "none" (sans reverse proxy) :**
+```bash
+# Installation sans reverse proxy - l'application écoute directement sur le port 80
+sudo deployment/scripts/setup-production.sh none
+```
+Dans ce mode, le serveur Node.js utilise directement le port 80 au lieu du port 3000.
 
 **Méthode 1.5 : Activer uniquement le démarrage automatique**
 

@@ -176,9 +176,18 @@ sed "s|User=pi|User=$REAL_USER|g" | \
 sed "s|Group=pi|Group=$REAL_USER|g" > /etc/systemd/system/borneez-gpio.service
 
 # Copier et adapter le service serveur
+# Si un reverse proxy est utilisé, le serveur reste sur port 3000
+# Sinon, il utilise directement le port 80
+if [ "$PROXY_TYPE" = "none" ]; then
+    SERVER_PORT=80
+else
+    SERVER_PORT=3000
+fi
+
 sed "s|/home/pi/Borneez|$PROJECT_DIR|g" "$PROJECT_DIR/deployment/systemd/borneez-server.service" | \
 sed "s|User=pi|User=$REAL_USER|g" | \
-sed "s|Group=pi|Group=$REAL_USER|g" > /etc/systemd/system/borneez-server.service
+sed "s|Group=pi|Group=$REAL_USER|g" | \
+sed "s|PORT=3000|PORT=$SERVER_PORT|g" > /etc/systemd/system/borneez-server.service
 
 # Recharger systemd
 systemctl daemon-reload
@@ -232,13 +241,13 @@ echo ""
 echo -e "${GREEN}🌐 Application disponible sur:${NC}"
 
 if [ "$PROXY_TYPE" != "none" ]; then
-    echo -e "   Local:    ${BLUE}http://localhost${NC}"
+    echo -e "   Local:    ${BLUE}http://localhost${NC} (via reverse proxy)"
     echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local${NC}"
     echo -e "   IP:       ${BLUE}http://$LOCAL_IP${NC}"
 else
-    echo -e "   Local:    ${BLUE}http://localhost:3000${NC}"
-    echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local:3000${NC}"
-    echo -e "   IP:       ${BLUE}http://$LOCAL_IP:3000${NC}"
+    echo -e "   Local:    ${BLUE}http://localhost${NC} (port 80, sans reverse proxy)"
+    echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local${NC}"
+    echo -e "   IP:       ${BLUE}http://$LOCAL_IP${NC}"
 fi
 
 echo ""
