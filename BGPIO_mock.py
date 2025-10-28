@@ -56,25 +56,29 @@ class RelayController:
 
         if state == "on":
             GPIO.output(pin, self.ACTIVE)
-            print(f"GPIO {pin}: HIGH (ON)")
+            gpio_state = "HIGH" if self.ACTIVE == GPIO.HIGH else "LOW"
+            print(f"GPIO {pin}: {gpio_state} (ON)")
         elif state == "off":
             GPIO.output(pin, self.INACTIVE)
-            print(f"GPIO {pin}: LOW (OFF)")
+            gpio_state = "HIGH" if self.INACTIVE == GPIO.HIGH else "LOW"
+            print(f"GPIO {pin}: {gpio_state} (OFF)")
         else:
             return {"error": "État invalide (utilise 'on' ou 'off')."}
 
         return {"gpio": pin, "state": state}
 
     def all_on(self):
+        gpio_state = "HIGH" if self.ACTIVE == GPIO.HIGH else "LOW"
         for pin in self.pins:
             GPIO.output(pin, self.ACTIVE)
-            print(f"GPIO {pin}: HIGH (ON)")
+            print(f"GPIO {pin}: {gpio_state} (ON)")
         return {"message": "Tous les relais activés."}
 
     def all_off(self):
+        gpio_state = "HIGH" if self.INACTIVE == GPIO.HIGH else "LOW"
         for pin in self.pins:
             GPIO.output(pin, self.INACTIVE)
-            print(f"GPIO {pin}: LOW (OFF)")
+            print(f"GPIO {pin}: {gpio_state} (OFF)")
         return {"message": "Tous les relais désactivés."}
 
 # --- Initialisation des relais (à adapter à ton câblage) ---
