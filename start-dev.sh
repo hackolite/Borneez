@@ -47,7 +47,7 @@ echo -e "${YELLOW}🔍 Vérification des dépendances Python...${NC}"
 python3 -c "import fastapi, uvicorn, pydantic" 2>/dev/null
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}📦 Installation des dépendances Python...${NC}"
-    pip3 install fastapi uvicorn pydantic
+    pip3 install --break-system-packages fastapi uvicorn pydantic
 fi
 
 echo ""
