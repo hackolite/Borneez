@@ -58,16 +58,23 @@ check_services_exist() {
 
 # Fonction pour détecter si un reverse proxy est configuré pour Borneez
 detect_reverse_proxy() {
+    # Vérifier Nginx
     if systemctl is-active nginx &>/dev/null && [ -f "/etc/nginx/sites-enabled/borneez" ]; then
         echo "nginx"
         return 0
-    elif systemctl is-active caddy &>/dev/null && [ -f "/etc/caddy/Caddyfile" ] && grep -q "borneez" /etc/caddy/Caddyfile 2>/dev/null; then
-        echo "caddy"
-        return 0
-    else
-        echo "none"
-        return 1
     fi
+    
+    # Vérifier Caddy avec configuration Borneez
+    if systemctl is-active caddy &>/dev/null && [ -f "/etc/caddy/Caddyfile" ]; then
+        if grep -q "borneez" /etc/caddy/Caddyfile 2>/dev/null; then
+            echo "caddy"
+            return 0
+        fi
+    fi
+    
+    # Aucun reverse proxy détecté
+    echo "none"
+    return 1
 }
 
 # Fonction pour créer les services systemd s'ils n'existent pas
