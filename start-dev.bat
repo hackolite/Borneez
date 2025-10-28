@@ -4,7 +4,7 @@ color 0B
 
 echo ========================================================
 echo     Borneez - Relay Control System
-echo           Mode DEVELOPPEMENT (Mock GPIO)
+echo              Mode DEVELOPPEMENT
 echo ========================================================
 echo.
 
@@ -65,9 +65,9 @@ echo taskkill /F /IM node.exe /T 2^>nul >> stop-services.bat
 echo del stop-services.bat >> stop-services.bat
 
 echo ========================================================
-echo   Demarrage du Backend GPIO (Mock Mode)
+echo   Demarrage du Backend GPIO
 echo ========================================================
-start "Backend GPIO (Mock)" cmd /k %PYTHON_CMD% BGPIO_mock.py
+start "Backend GPIO" cmd /k %PYTHON_CMD% BGPIO.py
 
 REM Attendre que le backend soit prêt
 timeout /t 3 /nobreak >nul
@@ -87,7 +87,7 @@ echo                SYSTEME DEMARRE
 echo ========================================================
 echo.
 echo Frontend disponible sur:    http://localhost:5000
-echo Backend GPIO (Mock) sur:    http://localhost:8000
+echo Backend GPIO sur:           http://localhost:8000
 echo Documentation API:          http://localhost:8000/docs
 echo.
 echo Configuration requise:
@@ -95,8 +95,6 @@ echo   1. Ouvrez http://localhost:5000
 echo   2. Cliquez sur 'API Configuration'
 echo   3. Entrez l'endpoint: http://localhost:8000
 echo   4. Cliquez sur 'Test Connection' puis 'Save Configuration'
-echo.
-echo Mode Mock active - Aucun materiel GPIO requis!
 echo.
 echo Appuyez sur une touche pour arreter tous les services...
 pause >nul
