@@ -99,7 +99,6 @@ Consultez [README.md](README.md) pour plus d'informations sur :
 
 ## 💡 Astuces
 
-- **Mode Mock** : Parfait pour développer/tester sans Raspberry Pi
 - **Auto-refresh** : Activez dans les paramètres pour voir les changements en temps réel
 - **Documentation API** : Disponible sur http://localhost:8000/docs
 - **Thème** : Basculez entre clair/sombre avec le bouton en haut à droite
