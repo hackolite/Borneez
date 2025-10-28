@@ -71,9 +71,90 @@ export function serveStatic(app: Express) {
   const distPath = path.resolve(import.meta.dirname, "public");
 
   if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    log(`Build directory not found: ${distPath}`, "express");
+    log("Frontend not built yet. Please run 'npm run build' first.", "express");
+    
+    // Serve a helpful error page instead of crashing
+    app.use("*", (_req, res) => {
+      res.status(503).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Borneez - Build Required</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 20px;
+              }
+              .container {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 40px;
+                max-width: 600px;
+                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+              }
+              h1 {
+                font-size: 2.5em;
+                margin: 0 0 20px 0;
+              }
+              p {
+                font-size: 1.2em;
+                line-height: 1.6;
+                margin: 15px 0;
+              }
+              code {
+                background: rgba(0, 0, 0, 0.3);
+                padding: 15px;
+                border-radius: 8px;
+                display: block;
+                margin: 20px 0;
+                font-family: 'Courier New', monospace;
+                font-size: 0.9em;
+              }
+              .warning {
+                background: rgba(255, 193, 7, 0.2);
+                border-left: 4px solid #ffc107;
+                padding: 15px;
+                border-radius: 4px;
+                margin: 20px 0;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>🚧 Build Required</h1>
+              <p>The Borneez frontend application has not been built yet.</p>
+              
+              <div class="warning">
+                <strong>⚠️ Action Required:</strong> Please build the application before starting in production mode.
+              </div>
+              
+              <p>Run the following command on your Raspberry Pi:</p>
+              <code>npm run build</code>
+              
+              <p>Then restart the server:</p>
+              <code>sudo PORT=80 npm start</code>
+              
+              <p style="margin-top: 30px; font-size: 0.9em; opacity: 0.8;">
+                For development mode (no build required), use:<br>
+                <code style="font-size: 0.85em; margin-top: 10px;">./start-dev.sh</code>
+              </p>
+            </div>
+          </body>
+        </html>
+      `);
+    });
+    return;
   }
 
   app.use(express.static(distPath));
