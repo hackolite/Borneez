@@ -5,7 +5,7 @@ import { relayCommandSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Helper function to make requests to external FastAPI
+  // Helper function to make requests to external FastAPI with timeout
   const callExternalApi = async (
     endpoint: string,
     method: string = "GET",
@@ -19,22 +19,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const url = `${apiEndpoint}${endpoint}`;
+    
+    // Create an AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     const options: RequestInit = {
       method,
       headers: {
         "Content-Type": "application/json",
       },
+      signal: controller.signal,
     };
 
     if (body) {
       options.body = JSON.stringify(body);
     }
 
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
+    try {
+      const response = await fetch(url, options);
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+      return response.json();
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      
+      // Handle specific error types
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout: Unable to reach GPIO controller. Please check if the backend is running.');
+      }
+      
+      // Handle connection errors
+      if (error.code === 'ECONNREFUSED' || error.cause?.code === 'ECONNREFUSED') {
+        throw new Error('Connection refused: GPIO controller is not reachable. Please verify the endpoint URL and ensure the backend is running.');
+      }
+      
+      if (error.code === 'ENOTFOUND' || error.cause?.code === 'ENOTFOUND') {
+        throw new Error('Host not found: Invalid GPIO controller endpoint. Please check the endpoint URL.');
+      }
+      
+      // Re-throw the original error if it's not a connection issue
+      throw error;
     }
-    return response.json();
   };
 
   // Get current API endpoint
