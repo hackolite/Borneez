@@ -6,7 +6,7 @@
   "scripts": {
     "predev:full": "node scripts/check-deps.js",
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "dev:backend": "python3 BGPIO_mock.py",
+    "dev:backend": "python3 BGPIO.py",
     "dev:full": "concurrently \"npm:dev:backend\" \"npm:dev\" --names \"backend,frontend\" --prefix-colors \"blue,green\"",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",

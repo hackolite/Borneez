@@ -80,7 +80,6 @@ check_file "README.md"
 check_file "DEPLOYMENT.md"
 check_file "package.json"
 check_file "BGPIO.py"
-check_file "BGPIO_mock.py"
 
 echo ""
 echo -e "${YELLOW}Vérification de la structure du projet...${NC}"

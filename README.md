@@ -173,9 +173,9 @@ Après configuration, vous pourrez accéder au système via :
 
 ### ⚡ Démarrage Rapide (Recommandé)
 
-#### Option 1 : Tout en un - Mode Développement (Sans Raspberry Pi)
+#### Option 1 : Tout en un - Mode Développement
 
-Le moyen le plus simple pour tester le système sans matériel GPIO :
+Le moyen le plus simple pour démarrer le système :
 
 **Linux/Mac :**
 ```bash
@@ -193,7 +193,7 @@ npm run dev:full
 ```
 
 Ces commandes démarrent automatiquement :
-- ✅ Backend GPIO en mode Mock (simule les GPIO)
+- ✅ Backend GPIO
 - ✅ Frontend + Proxy Server
 - ✅ Configuration automatique
 
@@ -231,16 +231,10 @@ Si vous préférez démarrer les services séparément :
 
 #### Étape 1 : Démarrer le contrôleur GPIO
 
-**Mode Mock (développement) :**
-```bash
-python3 BGPIO_mock.py
-# ou
-npm run dev:backend
-```
-
-**Mode Réel (sur Raspberry Pi) :**
 ```bash
 python3 BGPIO.py
+# ou
+npm run dev:backend
 # ou avec uvicorn
 uvicorn BGPIO:app --host 0.0.0.0 --port 8000
 ```
@@ -331,8 +325,7 @@ Le système sera accessible sur :
 
 ```
 Borneez/
-├── BGPIO.py                 # ⚡ Serveur FastAPI pour contrôle GPIO (Raspberry Pi)
-├── BGPIO_mock.py            # 🧪 Serveur FastAPI Mock (tests sans GPIO)
+├── BGPIO.py                 # ⚡ Serveur FastAPI pour contrôle GPIO
 ├── start-dev.sh             # 🚀 Script de démarrage rapide (Linux/Mac)
 ├── start-dev.bat            # 🚀 Script de démarrage rapide (Windows)
 ├── start-rpi.sh             # 🍓 Script de démarrage Raspberry Pi

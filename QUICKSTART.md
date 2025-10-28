@@ -84,11 +84,10 @@ Ce guide vous permet de démarrer le système de contrôle de relais en moins de
 
 | Commande | Description |
 |----------|-------------|
-| `npm run dev:full` | Démarre frontend + backend mock |
+| `npm run dev:full` | Démarre frontend + backend |
 | `npm run dev` | Démarre uniquement le frontend |
-| `npm run dev:backend` | Démarre uniquement le backend mock |
+| `npm run dev:backend` | Démarre uniquement le backend |
 | `python3 BGPIO.py` | Démarre le backend GPIO réel |
-| `python3 BGPIO_mock.py` | Démarre le backend GPIO mock |
 
 ## 📖 Documentation Complète
 
@@ -100,7 +99,6 @@ Consultez [README.md](README.md) pour plus d'informations sur :
 
 ## 💡 Astuces
 
-- **Mode Mock** : Parfait pour développer/tester sans Raspberry Pi
 - **Auto-refresh** : Activez dans les paramètres pour voir les changements en temps réel
 - **Documentation API** : Disponible sur http://localhost:8000/docs
 - **Thème** : Basculez entre clair/sombre avec le bouton en haut à droite

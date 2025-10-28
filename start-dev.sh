@@ -54,11 +54,11 @@ echo ""
 echo -e "${GREEN}✅ Toutes les dépendances sont prêtes!${NC}"
 echo ""
 
-# Démarrer le backend GPIO (Mock)
+# Démarrer le backend GPIO
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BLUE}1️⃣  Démarrage du Backend GPIO (Mock Mode)${NC}"
+echo -e "${BLUE}1️⃣  Démarrage du Backend GPIO${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-python3 BGPIO_mock.py &
+python3 BGPIO.py &
 BACKEND_PID=$!
 
 # Attendre que le backend soit prêt
@@ -81,7 +81,7 @@ echo -e "${GREEN}║                    ✅ SYSTÈME DÉMARRÉ ✅              
 echo -e "${GREEN}╚═══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${GREEN}🌐 Frontend disponible sur:${NC}    ${BLUE}http://localhost:5000${NC}"
-echo -e "${GREEN}🔧 Backend GPIO (Mock) sur:${NC}   ${BLUE}http://localhost:8000${NC}"
+echo -e "${GREEN}🔧 Backend GPIO sur:${NC}           ${BLUE}http://localhost:8000${NC}"
 echo -e "${GREEN}📖 Documentation API:${NC}         ${BLUE}http://localhost:8000/docs${NC}"
 echo ""
 echo -e "${YELLOW}📝 Configuration requise:${NC}"
@@ -90,7 +90,6 @@ echo -e "   2. Cliquez sur 'API Configuration'"
 echo -e "   3. Entrez l'endpoint: ${BLUE}http://localhost:8000${NC}"
 echo -e "   4. Cliquez sur 'Test Connection' puis 'Save Configuration'"
 echo ""
-echo -e "${YELLOW}💡 Mode Mock activé - Aucun matériel GPIO requis!${NC}"
 echo -e "${RED}⚠️  Appuyez sur Ctrl+C pour arrêter tous les services${NC}"
 echo ""
 
