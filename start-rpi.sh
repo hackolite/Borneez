@@ -73,7 +73,7 @@ if [ $BASIC_DEPS -ne 0 ] || [ $GPIO_DEPS -ne 0 ]; then
     fi
     # Les autres dépendances peuvent être installées via pip
     if [ $BASIC_DEPS -ne 0 ]; then
-        pip3 install fastapi uvicorn pydantic
+        pip3 install --break-system-packages fastapi uvicorn pydantic
     fi
 fi
 

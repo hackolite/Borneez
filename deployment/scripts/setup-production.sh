@@ -64,7 +64,7 @@ echo -e "${YELLOW}🐍 Installation de Python et dépendances GPIO...${NC}"
 apt-get install -y python3 python3-pip python3-rpi.gpio
 
 # Installer les dépendances Python pour FastAPI
-sudo -u $REAL_USER pip3 install fastapi uvicorn pydantic
+sudo -u $REAL_USER pip3 install --break-system-packages fastapi uvicorn pydantic
 
 # Installer Node.js si nécessaire
 if ! command -v node &> /dev/null; then
