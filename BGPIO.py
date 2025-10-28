@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import RPi.GPIO as GPIO
 from pydantic import BaseModel
 from typing import List
+from contextlib import asynccontextmanager
 
 # --- Configuration GPIO ---
 GPIO.setmode(GPIO.BCM)
@@ -43,10 +44,24 @@ class RelayController:
         return {"message": "Tous les relais désactivés."}
 
 # --- Initialisation des relais (à adapter à ton câblage) ---
-relais = RelayController([17, 27, 22, 23])
+# active_low=False car les relais s'activent avec GPIO.HIGH (comme dans le script standalone)
+relais = RelayController([17, 27, 22, 23], active_low=False)
+
+# --- Lifespan event handler for GPIO cleanup ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: GPIO already initialized in RelayController
+    yield
+    # Shutdown: cleanup GPIO
+    GPIO.cleanup()
 
 # --- Application FastAPI ---
-app = FastAPI(title="Relay API", description="API REST pour contrôler les relais du Raspberry Pi", version="1.0")
+app = FastAPI(
+    title="Relay API", 
+    description="API REST pour contrôler les relais du Raspberry Pi", 
+    version="1.0",
+    lifespan=lifespan
+)
 
 # --- Modèle de données ---
 class RelayCommand(BaseModel):
@@ -72,10 +87,6 @@ def turn_all_on():
 def turn_all_off():
     """Désactive tous les relais."""
     return relais.all_off()
-
-@app.on_event("shutdown")
-def cleanup_gpio():
-    GPIO.cleanup()
 
 # --- Point d'entrée principal ---
 if __name__ == "__main__":
