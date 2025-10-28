@@ -288,6 +288,21 @@ Le script configure automatiquement :
 - ✅ Services systemd pour démarrage automatique
 - ✅ Support mDNS (accès via raspberrypi.local)
 
+**Méthode 1.5 : Activer uniquement le démarrage automatique**
+
+Si vous avez déjà une installation et voulez juste activer le démarrage au boot :
+
+```bash
+# Activer le démarrage automatique
+sudo deployment/scripts/enable-autostart.sh enable
+
+# Vérifier le statut
+sudo deployment/scripts/enable-autostart.sh status
+
+# Désactiver si nécessaire
+sudo deployment/scripts/enable-autostart.sh disable
+```
+
 **Méthode 2 : Démarrage manuel sur port 80**
 
 ```bash
