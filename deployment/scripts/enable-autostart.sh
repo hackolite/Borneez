@@ -76,6 +76,21 @@ create_services() {
     
     echo -e "${YELLOW}📝 Création des fichiers de service systemd...${NC}"
     
+    # Détecter si un reverse proxy est installé
+    # Si nginx ou caddy est actif et configuré pour Borneez, utiliser port 3000
+    # Sinon, utiliser le port 80 directement
+    SERVER_PORT=3000
+    if systemctl is-active nginx &>/dev/null && [ -f "/etc/nginx/sites-enabled/borneez" ]; then
+        echo -e "${GREEN}   Nginx détecté - Configuration avec port 3000 (reverse proxy)${NC}"
+        SERVER_PORT=3000
+    elif systemctl is-active caddy &>/dev/null && [ -f "/etc/caddy/Caddyfile" ]; then
+        echo -e "${GREEN}   Caddy détecté - Configuration avec port 3000 (reverse proxy)${NC}"
+        SERVER_PORT=3000
+    else
+        echo -e "${YELLOW}   Aucun reverse proxy détecté - Configuration avec port 80${NC}"
+        SERVER_PORT=80
+    fi
+    
     # Copier et adapter le service GPIO
     sed "s|/home/pi/Borneez|$PROJECT_DIR|g" "$PROJECT_DIR/deployment/systemd/borneez-gpio.service" | \
     sed "s|User=pi|User=$REAL_USER|g" | \
@@ -84,7 +99,8 @@ create_services() {
     # Copier et adapter le service serveur
     sed "s|/home/pi/Borneez|$PROJECT_DIR|g" "$PROJECT_DIR/deployment/systemd/borneez-server.service" | \
     sed "s|User=pi|User=$REAL_USER|g" | \
-    sed "s|Group=pi|Group=$REAL_USER|g" > /etc/systemd/system/borneez-server.service
+    sed "s|Group=pi|Group=$REAL_USER|g" | \
+    sed "s|PORT=3000|PORT=$SERVER_PORT|g" > /etc/systemd/system/borneez-server.service
     
     # Recharger systemd
     systemctl daemon-reload
@@ -180,10 +196,24 @@ enable_autostart() {
     echo -e "${GREEN}║           ✅ DÉMARRAGE AUTOMATIQUE ACTIVÉ ✅             ║${NC}"
     echo -e "${GREEN}╚═══════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${GREEN}🌐 Application disponible sur:${NC}"
-    echo -e "   Local:    ${BLUE}http://localhost:3000${NC}"
-    echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local:3000${NC}"
-    echo -e "   IP:       ${BLUE}http://$LOCAL_IP:3000${NC}"
+    
+    # Détecter si un reverse proxy est installé pour afficher les bonnes infos
+    if systemctl is-active nginx &>/dev/null && [ -f "/etc/nginx/sites-enabled/borneez" ]; then
+        echo -e "${GREEN}🌐 Application disponible sur (via Nginx):${NC}"
+        echo -e "   Local:    ${BLUE}http://localhost${NC}"
+        echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local${NC}"
+        echo -e "   IP:       ${BLUE}http://$LOCAL_IP${NC}"
+    elif systemctl is-active caddy &>/dev/null && [ -f "/etc/caddy/Caddyfile" ]; then
+        echo -e "${GREEN}🌐 Application disponible sur (via Caddy):${NC}"
+        echo -e "   Local:    ${BLUE}http://localhost${NC}"
+        echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local${NC}"
+        echo -e "   IP:       ${BLUE}http://$LOCAL_IP${NC}"
+    else
+        echo -e "${GREEN}🌐 Application disponible sur (port 80, sans reverse proxy):${NC}"
+        echo -e "   Local:    ${BLUE}http://localhost${NC}"
+        echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local${NC}"
+        echo -e "   IP:       ${BLUE}http://$LOCAL_IP${NC}"
+    fi
     echo ""
     echo -e "${GREEN}🔧 Backend GPIO:${NC}"
     echo -e "   Local:  ${BLUE}http://localhost:8000${NC}"
