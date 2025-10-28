@@ -83,10 +83,9 @@ Le projet est organisé en **trois couches séparées** :
 # Python 3.8+
 python3 --version
 
-# Installation des dépendances GPIO
+# Installation des dépendances système
 sudo apt-get update
-sudo apt-get install python3-rpi.gpio
-pip3 install fastapi uvicorn pydantic
+sudo apt-get install python3 python3-venv python3-pip python3-rpi.gpio
 ```
 
 ### Sur la machine de développement
@@ -94,6 +93,9 @@ pip3 install fastapi uvicorn pydantic
 # Node.js 18+
 node --version
 npm --version
+
+# Python 3.8+ (pour le développement avec mock)
+python3 --version
 ```
 
 ## 📦 Installation
@@ -109,7 +111,20 @@ cd Borneez
 npm install
 ```
 
-### 3. Configurer les GPIO (sur Raspberry Pi)
+### 3. Configurer l'environnement Python (automatique)
+
+L'environnement virtuel Python sera créé automatiquement au premier démarrage.
+Pour le créer manuellement :
+```bash
+./scripts/setup-venv.sh
+```
+
+Cette commande :
+- ✅ Crée un environnement virtuel dans `./venv`
+- ✅ Installe les dépendances depuis `requirements.txt`
+- ✅ Configure l'accès à RPi.GPIO (sur Raspberry Pi)
+
+### 4. Configurer les GPIO (sur Raspberry Pi)
 
 Éditez `BGPIO.py` ligne 46 pour correspondre à votre câblage :
 ```python
@@ -225,30 +240,43 @@ Une fois démarré :
 
 > **Note :** Le port 80 nécessite `sudo`. Le script vous demandera le mot de passe au démarrage.
 
+> **Note :** Les scripts de démarrage créent automatiquement l'environnement virtuel Python au premier lancement.
+
 ### 🔧 Mode développement manuel (avancé)
 
 Si vous préférez démarrer les services séparément :
 
-#### Étape 1 : Démarrer le contrôleur GPIO
+#### Étape 1 : Configurer l'environnement virtuel (première fois uniquement)
+
+```bash
+# Créer et configurer l'environnement virtuel
+./scripts/setup-venv.sh
+```
+
+#### Étape 2 : Démarrer le contrôleur GPIO
 
 **Mode Mock (développement) :**
 ```bash
-python3 BGPIO_mock.py
-# ou
+# Avec l'environnement virtuel
+./venv/bin/python BGPIO_mock.py
+
+# ou avec npm (utilise python3 système)
 npm run dev:backend
 ```
 
 **Mode Réel (sur Raspberry Pi) :**
 ```bash
-python3 BGPIO.py
-# ou avec uvicorn
-uvicorn BGPIO:app --host 0.0.0.0 --port 8000
+# Avec l'environnement virtuel (recommandé)
+./venv/bin/python BGPIO.py
+
+# ou avec uvicorn depuis le venv
+./venv/bin/uvicorn BGPIO:app --host 0.0.0.0 --port 8000
 ```
 
 Le serveur GPIO démarre sur `http://localhost:8000`
 Documentation automatique : `http://localhost:8000/docs`
 
-#### Étape 2 : Démarrer le serveur proxy + frontend
+#### Étape 3 : Démarrer le serveur proxy + frontend
 ```bash
 npm run dev
 ```
@@ -290,9 +318,12 @@ sudo deployment/scripts/setup-production.sh caddy
 
 Le script configure automatiquement :
 - ✅ Toutes les dépendances système
+- ✅ **Environnement virtuel Python avec toutes les dépendances**
 - ✅ Reverse proxy (Nginx ou Caddy) sur port 80
 - ✅ Services systemd pour démarrage automatique
 - ✅ Support mDNS (accès via raspberrypi.local)
+
+> **Note :** L'environnement virtuel Python est créé dans `/home/pi/Borneez/venv` et est utilisé automatiquement par les services systemd.
 
 **Méthode 2 : Démarrage manuel sur port 80**
 

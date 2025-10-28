@@ -62,8 +62,12 @@ ssh pi@raspberrypi.local
 git clone https://github.com/hackolite/Borneez.git
 cd Borneez
 
-# Installer les dépendances Python
-pip3 install fastapi uvicorn pydantic
+# Installer les dépendances système Python
+sudo apt-get update
+sudo apt-get install -y python3 python3-venv python3-pip python3-rpi.gpio
+
+# Configurer l'environnement virtuel Python
+./scripts/setup-venv.sh
 
 # Installer Node.js si nécessaire
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -76,7 +80,13 @@ npm install
 npm run build
 ```
 
-2. **Configurer le service GPIO**
+2. **Configurer l'environnement virtuel Python**
+```bash
+# Créer l'environnement virtuel avec toutes les dépendances
+./scripts/setup-venv.sh
+```
+
+3. **Configurer le service GPIO**
 ```bash
 # Créer le fichier service
 sudo nano /etc/systemd/system/gpio-controller.service
@@ -92,7 +102,8 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/Borneez
-ExecStart=/usr/bin/python3 /home/pi/Borneez/BGPIO.py
+# Utilise l'environnement virtuel Python
+ExecStart=/home/pi/Borneez/venv/bin/python /home/pi/Borneez/BGPIO.py
 Restart=always
 RestartSec=10
 
@@ -107,7 +118,7 @@ sudo systemctl start gpio-controller
 sudo systemctl status gpio-controller
 ```
 
-3. **Configurer le service Proxy**
+4. **Configurer le service Proxy**
 ```bash
 sudo nano /etc/systemd/system/borneez-server.service
 ```

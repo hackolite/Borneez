@@ -61,10 +61,21 @@ apt-get update -qq
 
 # Installer Python et ses dépendances
 echo -e "${YELLOW}🐍 Installation de Python et dépendances GPIO...${NC}"
-apt-get install -y python3 python3-pip python3-rpi.gpio
+apt-get install -y python3 python3-pip python3-venv python3-rpi.gpio
 
-# Installer les dépendances Python pour FastAPI
-sudo -u $REAL_USER pip3 install fastapi uvicorn pydantic
+# Configurer l'environnement virtuel Python
+echo -e "${YELLOW}🐍 Configuration de l'environnement virtuel Python...${NC}"
+cd "$PROJECT_DIR"
+
+# Exécuter le script de configuration du venv en tant qu'utilisateur réel
+sudo -u $REAL_USER bash "$PROJECT_DIR/scripts/setup-venv.sh"
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Erreur lors de la configuration de l'environnement virtuel${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Environnement virtuel Python configuré${NC}"
 
 # Installer Node.js si nécessaire
 if ! command -v node &> /dev/null; then
