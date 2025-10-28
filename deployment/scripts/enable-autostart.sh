@@ -56,6 +56,20 @@ check_services_exist() {
     return 0
 }
 
+# Fonction pour détecter si un reverse proxy est configuré pour Borneez
+detect_reverse_proxy() {
+    if systemctl is-active nginx &>/dev/null && [ -f "/etc/nginx/sites-enabled/borneez" ]; then
+        echo "nginx"
+        return 0
+    elif systemctl is-active caddy &>/dev/null && [ -f "/etc/caddy/Caddyfile" ] && grep -q "borneez" /etc/caddy/Caddyfile 2>/dev/null; then
+        echo "caddy"
+        return 0
+    else
+        echo "none"
+        return 1
+    fi
+}
+
 # Fonction pour créer les services systemd s'ils n'existent pas
 create_services() {
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
@@ -79,11 +93,11 @@ create_services() {
     # Détecter si un reverse proxy est installé
     # Si nginx ou caddy est actif et configuré pour Borneez, utiliser port 3000
     # Sinon, utiliser le port 80 directement
-    SERVER_PORT=3000
-    if systemctl is-active nginx &>/dev/null && [ -f "/etc/nginx/sites-enabled/borneez" ]; then
+    PROXY_TYPE=$(detect_reverse_proxy)
+    if [ "$PROXY_TYPE" = "nginx" ]; then
         echo -e "${GREEN}   Nginx détecté - Configuration avec port 3000 (reverse proxy)${NC}"
         SERVER_PORT=3000
-    elif systemctl is-active caddy &>/dev/null && [ -f "/etc/caddy/Caddyfile" ]; then
+    elif [ "$PROXY_TYPE" = "caddy" ]; then
         echo -e "${GREEN}   Caddy détecté - Configuration avec port 3000 (reverse proxy)${NC}"
         SERVER_PORT=3000
     else
@@ -198,12 +212,13 @@ enable_autostart() {
     echo ""
     
     # Détecter si un reverse proxy est installé pour afficher les bonnes infos
-    if systemctl is-active nginx &>/dev/null && [ -f "/etc/nginx/sites-enabled/borneez" ]; then
+    PROXY_TYPE=$(detect_reverse_proxy)
+    if [ "$PROXY_TYPE" = "nginx" ]; then
         echo -e "${GREEN}🌐 Application disponible sur (via Nginx):${NC}"
         echo -e "   Local:    ${BLUE}http://localhost${NC}"
         echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local${NC}"
         echo -e "   IP:       ${BLUE}http://$LOCAL_IP${NC}"
-    elif systemctl is-active caddy &>/dev/null && [ -f "/etc/caddy/Caddyfile" ]; then
+    elif [ "$PROXY_TYPE" = "caddy" ]; then
         echo -e "${GREEN}🌐 Application disponible sur (via Caddy):${NC}"
         echo -e "   Local:    ${BLUE}http://localhost${NC}"
         echo -e "   Hostname: ${BLUE}http://$HOSTNAME.local${NC}"
