@@ -111,11 +111,27 @@ npm install
 
 ### 3. Configurer les GPIO (sur Raspberry Pi)
 
-Éditez `BGPIO.py` ligne 46 pour correspondre à votre câblage :
+Éditez `BGPIO.py` ligne 49 pour correspondre à votre câblage :
 ```python
 # Exemple : GPIO 17, 27, 22, 23
-relais = RelayController([17, 27, 22, 23])
+# active_low=False : Le relais s'active avec GPIO.HIGH (signal haut) - configuration par défaut
+# active_low=True : Le relais s'active avec GPIO.LOW (signal bas) - pour modules relais actifs bas
+relais = RelayController([17, 27, 22, 23], active_low=False)
 ```
+
+**Comment choisir `active_low` ?**
+
+**Méthode automatique (recommandé) :**
+```bash
+# Testez votre relais avec le script fourni
+python3 test_relay.py 17  # Remplacez 17 par votre GPIO
+
+# Le script vous indiquera quelle configuration utiliser
+```
+
+**Méthode manuelle :**
+- Si un test direct avec `GPIO.output(PIN, GPIO.HIGH)` active votre relais → utilisez `active_low=False`
+- Si un test direct avec `GPIO.output(PIN, GPIO.LOW)` active votre relais → utilisez `active_low=True`
 
 ## ⚙️ Configuration
 
@@ -569,13 +585,37 @@ npm install
 ### Les relais ne répondent pas
 
 1. Vérifiez le câblage
-2. Vérifiez la configuration `active_low` dans BGPIO.py :
+2. **Testez directement votre relais** avec ce script pour identifier le mode correct :
 ```python
-# Pour relais actifs bas (la plupart)
-relais = RelayController([17, 27, 22, 23], active_low=True)
+import RPi.GPIO as GPIO
+import time
 
-# Pour relais actifs haut
+PIN = 17  # Changez selon votre GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(PIN, GPIO.OUT)
+
+try:
+    print("Test HIGH (signal haut)...")
+    GPIO.output(PIN, GPIO.HIGH)
+    time.sleep(2)
+    
+    print("Test LOW (signal bas)...")
+    GPIO.output(PIN, GPIO.LOW)
+    time.sleep(2)
+finally:
+    GPIO.cleanup()
+
+# Si le relais s'active avec HIGH → utilisez active_low=False dans BGPIO.py
+# Si le relais s'active avec LOW → utilisez active_low=True dans BGPIO.py
+```
+
+3. Configurez `active_low` dans BGPIO.py selon votre test :
+```python
+# Si votre relais s'active avec GPIO.HIGH (signal haut) - configuration par défaut
 relais = RelayController([17, 27, 22, 23], active_low=False)
+
+# Si votre relais s'active avec GPIO.LOW (signal bas) - modules relais actifs bas
+relais = RelayController([17, 27, 22, 23], active_low=True)
 ```
 
 ## 🧪 Tests

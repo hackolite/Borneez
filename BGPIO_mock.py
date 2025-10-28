@@ -73,7 +73,10 @@ class RelayController:
         return {"message": "Tous les relais désactivés."}
 
 # --- Initialisation des relais (à adapter à ton câblage) ---
-relais = RelayController([17, 27, 22, 23])
+# active_low=False : Le relais s'active avec GPIO.HIGH (signal haut)
+# active_low=True : Le relais s'active avec GPIO.LOW (signal bas)
+# Utilisez active_low=False si votre test direct avec GPIO.HIGH fonctionne
+relais = RelayController([17, 27, 22, 23], active_low=False)
 
 # --- Application FastAPI ---
 app = FastAPI(title="Relay API (Mock)", description="API REST pour contrôler les relais du Raspberry Pi (Mode Mock pour tests)", version="1.0")
