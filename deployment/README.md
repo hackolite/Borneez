@@ -13,7 +13,9 @@ deployment/
 │   ├── borneez-gpio.service     # Service systemd pour le contrôleur GPIO
 │   └── borneez-server.service   # Service systemd pour le serveur proxy
 └── scripts/
-    └── setup-production.sh      # Script d'installation automatique
+    ├── setup-production.sh      # Script d'installation automatique complète
+    ├── enable-autostart.sh      # Script pour activer/désactiver le démarrage auto
+    └── validate-deployment.sh   # Script de validation du déploiement
 ```
 
 ## 🚀 Installation Rapide (Recommandé)
@@ -45,6 +47,27 @@ Le script d'installation va :
 5. ✅ Démarrer automatiquement tous les services
 
 Après l'installation, l'application sera accessible sur **http://raspberrypi.local** ou **http://&lt;IP_RASPBERRY&gt;**
+
+### Méthode simple - Activer le démarrage automatique uniquement
+
+Si vous avez déjà une installation fonctionnelle et souhaitez simplement activer le démarrage automatique au boot :
+
+```bash
+# Activer le démarrage automatique
+sudo deployment/scripts/enable-autostart.sh enable
+
+# Vérifier le statut
+sudo deployment/scripts/enable-autostart.sh status
+
+# Désactiver le démarrage automatique
+sudo deployment/scripts/enable-autostart.sh disable
+```
+
+Le script `enable-autostart.sh` :
+- ✅ Configure les services systemd s'ils n'existent pas déjà
+- ✅ Active le démarrage automatique au boot
+- ✅ Démarre immédiatement les services
+- ✅ Affiche le statut et les URLs d'accès
 
 ## 🔧 Options de Déploiement
 
@@ -199,7 +222,20 @@ Puis redémarrez : `sudo systemctl restart caddy`
 
 ## 🔄 Gestion des Services
 
-### Commandes utiles
+### Commandes rapides avec le script enable-autostart.sh
+
+```bash
+# Activer le démarrage automatique au boot
+sudo deployment/scripts/enable-autostart.sh enable
+
+# Désactiver le démarrage automatique
+sudo deployment/scripts/enable-autostart.sh disable
+
+# Vérifier le statut des services
+sudo deployment/scripts/enable-autostart.sh status
+```
+
+### Commandes systemd manuelles
 
 ```bash
 # Voir les logs
@@ -218,9 +254,9 @@ sudo systemctl stop borneez-server
 sudo systemctl status borneez-gpio
 sudo systemctl status borneez-server
 
-# Désactiver le démarrage automatique
-sudo systemctl disable borneez-gpio
-sudo systemctl disable borneez-server
+# Activer/désactiver le démarrage automatique
+sudo systemctl enable borneez-gpio borneez-server
+sudo systemctl disable borneez-gpio borneez-server
 ```
 
 ### Redémarrage après modification du code
