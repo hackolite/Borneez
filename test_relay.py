@@ -13,39 +13,46 @@ Exemple:
 import sys
 import time
 
+# Mock GPIO class for testing without hardware
+class MockGPIO:
+    BCM = "BCM"
+    OUT = "OUT"
+    LOW = 0
+    HIGH = 1
+    
+    @staticmethod
+    def setmode(mode):
+        print(f"   [MOCK] GPIO.setmode({mode})")
+    
+    @staticmethod
+    def setup(pin, mode):
+        print(f"   [MOCK] GPIO.setup(pin={pin}, mode={mode})")
+    
+    @staticmethod
+    def output(pin, state):
+        state_str = "HIGH" if state == 1 else "LOW"
+        print(f"   [MOCK] GPIO.output(pin={pin}, state={state_str})")
+    
+    @staticmethod
+    def cleanup():
+        print("   [MOCK] GPIO.cleanup()")
+
+# Try to import real RPi.GPIO, fallback to mock
 try:
     import RPi.GPIO as GPIO
     MOCK_MODE = False
-except (ImportError, RuntimeError):
+except ImportError:
+    # RPi.GPIO n'est pas installé - utiliser le mode simulation
+    MOCK_MODE = True
+    GPIO = MockGPIO()
     print("⚠️  RPi.GPIO non disponible - Mode simulation")
     print("   Pour tester sur Raspberry Pi, installez: sudo apt-get install python3-rpi.gpio\n")
-    
-    # Mock GPIO for testing
-    class MockGPIO:
-        BCM = "BCM"
-        OUT = "OUT"
-        LOW = 0
-        HIGH = 1
-        
-        @staticmethod
-        def setmode(mode):
-            print(f"   [MOCK] GPIO.setmode({mode})")
-        
-        @staticmethod
-        def setup(pin, mode):
-            print(f"   [MOCK] GPIO.setup(pin={pin}, mode={mode})")
-        
-        @staticmethod
-        def output(pin, state):
-            state_str = "HIGH" if state == 1 else "LOW"
-            print(f"   [MOCK] GPIO.output(pin={pin}, state={state_str})")
-        
-        @staticmethod
-        def cleanup():
-            print("   [MOCK] GPIO.cleanup()")
-    
-    GPIO = MockGPIO()
+except RuntimeError as e:
+    # Erreur d'accès GPIO - probablement un problème de permissions
     MOCK_MODE = True
+    GPIO = MockGPIO()
+    print(f"⚠️  Erreur d'accès GPIO: {e}")
+    print("   Vous devez peut-être exécuter avec sudo: sudo python3 test_relay.py\n")
 
 
 def test_relay(pin):
@@ -109,10 +116,10 @@ def test_relay(pin):
     print("\nQuand est-ce que votre relais s'est activé ?")
     print("\n1️⃣  Si le relais s'active avec GPIO.HIGH (signal haut):")
     print("   ➡️  Utilisez: active_low=False dans BGPIO.py")
-    print("   ➡️  Ligne 49: relais = RelayController([...], active_low=False)")
+    print("   ➡️  Exemple: relais = RelayController([...], active_low=False)")
     print("\n2️⃣  Si le relais s'active avec GPIO.LOW (signal bas):")
     print("   ➡️  Utilisez: active_low=True dans BGPIO.py")
-    print("   ➡️  Ligne 49: relais = RelayController([...], active_low=True)")
+    print("   ➡️  Exemple: relais = RelayController([...], active_low=True)")
     print("\n" + "=" * 70)
 
 

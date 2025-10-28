@@ -111,7 +111,7 @@ npm install
 
 ### 3. Configurer les GPIO (sur Raspberry Pi)
 
-Éditez `BGPIO.py` ligne 49 pour correspondre à votre câblage :
+Éditez `BGPIO.py` à la section d'initialisation des relais pour correspondre à votre câblage :
 ```python
 # Exemple : GPIO 17, 27, 22, 23
 # active_low=False : Le relais s'active avec GPIO.HIGH (signal haut) - configuration par défaut
